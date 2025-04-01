@@ -576,11 +576,12 @@ function time_update()
 
     nra::Int64 = 0
     
-
-    for x in humans
-        if x.notified
-            testing_infection(x, p.test_ra)
-            x.notified = false
+    if p.testing
+        for x in humans
+            if x.notified
+                testing_infection(x, p.test_ra)
+                x.notified = false
+            end
         end
     end
 
@@ -780,7 +781,7 @@ function move_to_mild(x::Human)
     #   and not go through the mild compartment 
     nra = 0
     
-    if !x.tested && x.has_app
+    if p.testing && !x.tested && x.has_app
         testing_infection(x, p.test_ra)
     end
 
@@ -810,7 +811,7 @@ function move_to_inf(x::Human)
     
     x.tis = 0 
     
-    if !x.tested && x.has_app
+    if p.testing && !x.tested && x.has_app
         testing_infection(x, p.test_ra)
     end
 
