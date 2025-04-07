@@ -79,10 +79,6 @@ function run(myp::cv.ModelParameters, nsims=1000, folderprefix="./")
     writedlm(string(folderprefix,"/year_of_death.dat"),hcat([cdr[i].vector_dead for i=1:nsims]...))
     writedlm(string(folderprefix,"/npcr.dat"),hcat([cdr[i].npcr for i=1:nsims]...))
     writedlm(string(folderprefix,"/nra.dat"),hcat([cdr[i].nra for i=1:nsims]...))
-    writedlm(string(folderprefix,"/niso_t_p.dat"),hcat([cdr[i].niso_t_p for i=1:nsims]...))
-    writedlm(string(folderprefix,"/niso_t_w.dat"),hcat([cdr[i].niso_t_w for i=1:nsims]...))
-    writedlm(string(folderprefix,"/niso_f_p.dat"),hcat([cdr[i].niso_f_p for i=1:nsims]...))
-    writedlm(string(folderprefix,"/niso_f_w.dat"),hcat([cdr[i].niso_f_w for i=1:nsims]...))
     writedlm(string(folderprefix,"/nleft.dat"),hcat([cdr[i].nleft for i=1:nsims]...))
     writedlm(string(folderprefix,"/totalisog.dat"),vcat([cdr[i].giso for i=1:nsims]))
     writedlm(string(folderprefix,"/totalisow.dat"),vcat([cdr[i].wiso for i=1:nsims]))
@@ -112,7 +108,8 @@ function create_folder(ip::cv.ModelParameters,province="ontario")
 end
 
 
-
+# change coverage of app_coverage
+# time testing
 function run_param_scen_cal(b::Float64,province::String="ontario",h_i::Int64 = 0,ic1::Int64=1,strains::Int64 = 1,index::Int64 = 0,scen::Int64 = 0,tra::Int64 = 0,eb::Int64 = 0,wpt::Int64 = 100,mt::Int64=300,test_time::Int64 = 1,test_dur::Int64=112,mildcomp::Float64 = 1.0,workcomp::Float64 = 1.0,dayst::Vector{Int64} = [1;4],trans_omicron::Float64 = 1.0,immu_omicron::Float64 = 0.0,rc=[1.0],dc=[1],nsims::Int64=500)
     
     
@@ -121,21 +118,11 @@ function run_param_scen_cal(b::Float64,province::String="ontario",h_i::Int64 = 0
     initialinf = $ic1,
     file_index = $index,
     modeltime=$mt, prov = Symbol($province),
-    time_change_contact = $dc,
-    change_rate_values = $rc,
     n_boosts = 1,
     scenariotest = $scen,
-    extra_booster = $eb,
-    size_threshold = $wpt,
-    test_ra = $tra,
-    testing_days = $dayst,
-    strain = $strains,
-    immunity_omicron = $immu_omicron,
-    transmissibility_omicron = $trans_omicron,
     start_testing = $test_time,
     test_for = $test_dur,
-    fmild = $mildcomp,
-    fwork = $workcomp)
+    )
 
     folder = create_folder(ip,province)
 

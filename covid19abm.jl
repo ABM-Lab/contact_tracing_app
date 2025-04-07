@@ -63,6 +63,7 @@ Base.@kwdef mutable struct Human
     ncontacts_day::Int8 = 0
     tested::Bool = false
     notified::Bool = false
+    timetotest::Int64 = -1
 end
 
 ## default system parameters
@@ -96,8 +97,10 @@ end
     ### 0.5*0.95 = 0.475, so we want to multiply this by 1.473684211
     hosp_red::Float64 = 3.1
     isolation_days::Int64 = 5
+    ageintapp::Vector{Int64} = [10; 60]
     ##for testing
     test_ra::Int64 = 0 #1 - PCR, 2 - Abbott_PanBio 3 - 	BD VERITO	4 - SOFIA
+    time_until_testing::Int64 = 1
     #prop_working::Float64 = 0.65 #https://www.ontario.ca/document/ontario-employment-reports/april-june-2021#:~:text=Ontario's%20overall%20labour%20force%20participation,years%20and%20over%20at%2038.8%25.
 end
 
@@ -118,7 +121,7 @@ export ModelParameters, HEALTH, Human, humans, BETAS
 
 function runsim(simnum, ip::ModelParameters)
     # function runs the `main` function, and collects the data as dataframes. 
-    hmatrix, hh1, nra, npcr, niso_t_p, niso_t_w,niso_f_p,niso_f_w, nleft = main(ip,simnum)            
+    hmatrix, hh1, nra, npcr, nleft = main(ip,simnum)            
 
     #Get the R0
     
@@ -165,8 +168,7 @@ function runsim(simnum, ip::ModelParameters)
     wiso = map(y-> sum([ii.totaldaysiso for ii in humans[y]]),workiso_gr)
 
     return (a=all1, g1=ag1, g2=ag2, g3=ag3, g4=ag4, g5=ag5,g6=ag6,g7=ag7, work = work,
-    vector_dead=vector_ded,nra=nra,npcr=npcr, R0 = R01, niso_t_p=niso_t_p, niso_t_w=niso_t_w,
-    niso_f_p=niso_f_p,niso_f_w=niso_f_w, nleft=nleft,giso = giso, wiso = wiso)
+    vector_dead=vector_ded,nra=nra,npcr=npcr, R0 = R01, niso_t_p=niso_t_p, nleft=nleft,giso = giso, wiso = wiso)
 end
 export runsim
 
@@ -197,10 +199,6 @@ function main(ip::ModelParameters,sim::Int64)
 
     nra::Vector{Int64} = zeros(Int64,p.modeltime)
     npcr::Vector{Int64} = zeros(Int64,p.modeltime)
-    niso_t_w::Vector{Int64} = zeros(Int64,p.modeltime)
-    niso_f_w::Vector{Int64} = zeros(Int64,p.modeltime)
-    niso_t_p::Vector{Int64} = zeros(Int64,p.modeltime)
-    niso_f_p::Vector{Int64} = zeros(Int64,p.modeltime)
     nleft::Vector{Int64} = zeros(Int64,p.modeltime)
 
     #insert one infected in the latent status in age group 4
@@ -232,14 +230,13 @@ function main(ip::ModelParameters,sim::Int64)
     setfield!(p,:testing,true)
     # start the time loop
     for st = p.start_testing:min((p.start_testing+p.test_for-1),p.modeltime)
-        initial_dw = st+(p.initial_day_week-1)-7*Int(floor((st-1+(p.initial_day_week-1))/7))
+        
         for x in humans
             if x.iso && !(x.health_status in (HOS,ICU,DED))
                 x.totaldaysiso += 1
             end
         end
 
-        nra[st],npcr[st],nleft[st] = testing(initial_dw)
         _get_model_state(st, hmatrix) ## this datacollection needs to be at the start of the for loop
         dyntrans(st, grps,sim)
         sw = time_update() ###update the system
@@ -265,7 +262,7 @@ function main(ip::ModelParameters,sim::Int64)
     end
     
     
-    return hmatrix, h_init1, nra, npcr, niso_t_p, niso_t_w,niso_f_p,niso_f_w, nleft## return the model state as well as the age groups. 
+    return hmatrix, h_init1, nra, npcr, nleft## return the model state as well as the age groups. 
 end
 export main
 
@@ -578,7 +575,7 @@ function time_update()
     
     if p.testing
         for x in humans
-            if x.notified
+            if x.notified && x.timetotest == 0
                 testing_infection(x, p.test_ra)
                 x.notified = false
             end
@@ -592,6 +589,7 @@ function time_update()
         x.daysinf += 1
         x.days_after_detection += 1 #we don't care about this untill the individual is detected
         x.daysisolation += 1
+        x.timetotest -= 1
         
         if x.tis >= x.exp             
             @match Symbol(x.swap_status) begin
@@ -758,6 +756,7 @@ function send_notification(x::human)
 
     for i in v
         humans[i].notified = true
+        humans[i].timetotest = p.time_until_testing
     end
 
 end
