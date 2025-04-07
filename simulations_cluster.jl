@@ -53,7 +53,7 @@ function run(myp::cv.ModelParameters, nsims=1000, folderprefix="./")
     
     #c1 = Symbol.((:LAT, :PRE, :MILD, :INF, :HOS, :ICU, :DED,:LAT2, :PRE2, :MILD2, :INF2, :HOS2, :ICU2, :DED2,:LAT3, :PRE3, :MILD3, :INF3, :HOS3, :ICU3, :DED3), :_INC)
     
-    c1 = Symbol.((:LAT, :MILD, :INF, :HOS, :ICU, :DED,:LAT2, :MILD2, :INF2, :HOS2, :ICU2, :DED2,:LAT3, :MILD3, :INF3, :HOS3, :ICU3, :DED3), :_INC)
+    c1 = Symbol.((:LAT, :MILD, :INF, :HOS, :ICU, :DED), :_INC)
     #c2 = Symbol.((:LAT, :HOS, :ICU, :DED,:LAT2, :HOS2, :ICU2, :DED2,:LAT3, :HOS3, :ICU3, :DED3), :_PREV)
     
     #c2 = Symbol.((:LAT, :HOS, :ICU, :DED,:LAT2, :HOS2, :ICU2, :DED2), :_PREV)
