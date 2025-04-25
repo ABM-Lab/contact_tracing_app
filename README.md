@@ -4,3 +4,5 @@
 - Adapt the __scen__ and __simulations_cluster__
 - Make sure the tested individuals are properly isolated
 - Run the code for different coverages
+
+## Taiye started working
