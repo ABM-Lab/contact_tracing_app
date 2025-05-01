@@ -1,7 +1,6 @@
 module covid19abm
 
-# I will start
-
+# Edit: 2025.05.01
 using Base
 using Parameters, Distributions, StatsBase, StaticArrays, Random, Match, DataFrames
 @enum HEALTH SUS LAT PRE ASYMP MILD MISO INF IISO HOS ICU REC DED UNDEF
