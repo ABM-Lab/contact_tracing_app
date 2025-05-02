@@ -1,6 +1,6 @@
 module covid19abm
 
-# Edit: 2025.05.01
+# Edit: 2025.05.02
 # Any edits that I make will include "#Taiye:".
 using Base
 using Parameters, Distributions, StatsBase, StaticArrays, Random, Match, DataFrames
@@ -422,59 +422,59 @@ function _get_column_incidence(hmatrix, hcol)
     return timevec
 end
 
+# Taiye: Since we are not considering herd immunity at this stage, this function might not be necessary.
+#function herd_immu_dist_4(sim::Int64,strain::Int64)
+ #   rng = MersenneTwister(200*sim)
+  #  vec_n = zeros(Int32,6)
+   # N::Int64 = 0
+    #if p.herd == 5
+     #   vec_n = [9; 148; 262;  68; 4; 9]
+      #  N = 5
 
-function herd_immu_dist_4(sim::Int64,strain::Int64)
-    rng = MersenneTwister(200*sim)
-    vec_n = zeros(Int32,6)
-    N::Int64 = 0
-    if p.herd == 5
-        vec_n = [9; 148; 262;  68; 4; 9]
-        N = 5
+   # elseif p.herd == 10
+    #    vec_n = [32; 279; 489; 143; 24; 33]
 
-    elseif p.herd == 10
-        vec_n = [32; 279; 489; 143; 24; 33]
+     #   N = 9
 
-        N = 9
+    #elseif p.herd == 20
+     #   vec_n = [71; 531; 962; 302; 57; 77]
 
-    elseif p.herd == 20
-        vec_n = [71; 531; 962; 302; 57; 77]
+      #  N = 14
+    #elseif p.herd == 30
+     #   vec_n = [105; 757; 1448; 481; 87; 122]
 
-        N = 14
-    elseif p.herd == 30
-        vec_n = [105; 757; 1448; 481; 87; 122]
+      #  N = 16
+   # elseif p.herd == 50
+    #    vec_n = map(y->y*5,[32; 279; 489; 143; 24; 33])
 
-        N = 16
-    elseif p.herd == 50
-        vec_n = map(y->y*5,[32; 279; 489; 143; 24; 33])
-
-        N = 16
-    elseif p.herd == 0
-        vec_n = [0;0;0;0;0;0]
+     #   N = 16
+    #elseif p.herd == 0
+     #   vec_n = [0;0;0;0;0;0]
        
-    else
-        vec_n = map(y->Int(round(y*p.herd/10)),[32; 279; 489; 143; 24; 33])
-        N = 16
-    end
+    #else
+     #   vec_n = map(y->Int(round(y*p.herd/10)),[32; 279; 489; 143; 24; 33])
+      #  N = 16
+   # end
 
-    vprob::Vector{Float64} = vector_probs()
-    dprob = Distributions.Categorical(vprob)
-    for g = 1:6
-        pos = findall(y->y.ag_new == g && y.health == SUS,humans)
-        n_dist = min(length(pos),Int(floor(vec_n[g]*p.popsize/10000)))
-        pos2 = sample(rng,pos,n_dist,replace=false)
-        for i = pos2
-            humans[i].strain = strain
-            humans[i].swap = strain == 1 ? REC : REC2
-            humans[i].swap_status = REC
-            move_to_recovered(humans[i])
-            r = rand()
-            day = rand(dprob)
-            humans[i].sickfrom = INF
-            humans[i].herd_im = true
-        end
-    end
-    return N
-end
+    #vprob::Vector{Float64} = vector_probs()
+    #dprob = Distributions.Categorical(vprob)
+   # for g = 1:6
+       # pos = findall(y->y.ag_new == g && y.health == SUS,humans)
+        #n_dist = min(length(pos),Int(floor(vec_n[g]*p.popsize/10000)))
+        #pos2 = sample(rng,pos,n_dist,replace=false)
+        #for i = pos2
+         #   humans[i].strain = strain
+          #  humans[i].swap = strain == 1 ? REC : REC2
+           # humans[i].swap_status = REC
+            #move_to_recovered(humans[i])
+           # r = rand()
+            #day = rand(dprob)
+          #  humans[i].sickfrom = INF
+           # humans[i].herd_im = true
+  #      end
+   # end
+    #return N
+#end
 
 function _get_column_prevalence(hmatrix, hcol)
     inth = Int(hcol)
@@ -515,17 +515,18 @@ function get_province_ag(prov)
 end
 export get_province_ag
 
-function comorbidity(ag::Int16)
+# Taiye: We are not considering comorbidities at this stage.
+#function comorbidity(ag::Int16)
 
-    a = [4;19;49;64;79;999]
-    g = findfirst(x->x>=ag,a)
-    prob = [0.05; 0.1; 0.28; 0.55; 0.74; 0.81]
+ #   a = [4;19;49;64;79;999]
+  #  g = findfirst(x->x>=ag,a)
+   # prob = [0.05; 0.1; 0.28; 0.55; 0.74; 0.81]
 
-    com = rand() < prob[g] ? 1 : 0
+    #com = rand() < prob[g] ? 1 : 0
 
-    return com    
-end
-export comorbidity
+#    return com    
+#end
+#export comorbidity
 
 
 function initialize() 
@@ -545,7 +546,9 @@ function initialize()
         x.exp = 999  ## susceptible people don't expire.
         
         #x.dur = sample_epi_durations() # sample epi periods   
-        x.comorbidity = comorbidity(x.age)
+      
+      #  x.comorbidity = comorbidity(x.age) # Taiye: We are not considering comorbidities at this stage.
+      
         # initialize the next day counts (this is important in initialization since dyntrans runs first)
         x.contacts = repeat([[0]], p.track_days)
         
@@ -581,12 +584,14 @@ function insert_infected(health, num, ag)
                     x.swap_status = LAT
                     x.daysinf = rand(1:x.dur[1])
                     move_to_latent(x)
-                elseif health == MILD
-                    x.swap = health
-                    x.swap_status = MILD
-                    x.wentto = 1
-                    x.daysinf = x.dur[2]+1
-                    move_to_mild(x)
+                
+                # Taiye: We are not currently considering MILD**.
+                #elseif health == MILD
+                 #   x.swap = health
+                  #  x.swap_status = MILD
+                   # x.wentto = 1
+                    #x.daysinf = x.dur[2]+1
+                    #move_to_mild(x)
                 elseif health == INF
                     x.swap = health
                     x.swap_status = INF
@@ -597,11 +602,14 @@ function insert_infected(health, num, ag)
                     x.swap_status = ASYMP
                     x.wentto = 2
                     move_to_asymp(x)
-                elseif health == REC 
-                    x.swap = health
-                    x.swap_status = REC
-                    x.wentto = rand(1:2)
-                    move_to_recovered(x)
+                
+                # Taiye: Confirm whether recovered and deceased individuals should be considered.    
+                #elseif health == REC 
+                 #   x.swap = health
+                  #  x.swap_status = REC
+                   # x.wentto = rand(1:2)
+                    #move_to_recovered(x)
+
                 else 
                     error("can not insert human of health $(health)")
                 end
@@ -647,17 +655,22 @@ function time_update()
                 end
                 :PRE  => begin move_to_pre(x); end
                 :ASYMP => begin move_to_asymp(x);  end
-                :MILD => begin nra+=move_to_mild(x); end
-                :INF  => begin move_to_inf(x); end    
-                :HOS  => begin move_to_hospicu(x); end 
-                :ICU  => begin move_to_hospicu(x); end
-                :REC  => begin move_to_recovered(x); end
-                :DED  => begin move_to_dead(x); end
+              # Taiye:  :MILD => begin nra+=move_to_mild(x); end
+              
+              Taiye:   :INF  => begin move_to_inf(x); end    
+              
+              # Taiye:   :HOS  => begin move_to_hospicu(x); end 
+              # Taiye:   :ICU  => begin move_to_hospicu(x); end
+              # Taiye:   :REC  => begin move_to_recovered(x); end
+              # Taiye:   :DED  => begin move_to_dead(x); end
                 _    => begin dump(x); error("swap expired, but no swap set."); end
             end
         end
         #if the individual recovers, we need to set they free. This loop must be here
-        if x.iso && x.daysisolation >= p.isolation_days && !(x.health_status in (HOS,ICU,DED))
+
+        # Taiye: Confirm whether recovered individuals can contract the virus more than once. This loop might be unnecessary.
+        # if x.iso && x.daysisolation >= p.isolation_days && !(x.health_status in (HOS,ICU,DED))
+        if x.iso && x.daysisolation >= p.isolation_days # && !(x.health_status in (HOS,ICU,DED)) # Taiye
             _set_isolation(x,false,:null)
             if x.tested # if the individual was tested and the days of isolation is finished, we can return the tested to false
                 x.tested = false
@@ -758,8 +771,10 @@ function move_to_asymp(x::Human)
     x.tis = 0 
     x.exp = x.dur[2] # get the presymptomatic period
    
-    x.swap = REC
-    x.swap_status = REC
+# Taiye: The swap to REC might be unncessary.
+    #x.swap = REC
+    #x.swap_status = REC
+    
     # x.iso property remains from either the latent or presymptomatic class
     # if x.iso is true, the asymptomatic individual has limited contacts
 end
@@ -783,13 +798,16 @@ function move_to_pre(x::Human)
     if rand() < (1-θ[x.ag])
         x.swap = INF
         x.swap_status = INF
-    else 
-        x.swap = MILD
-        x.swap_status = MILD
+    
+    # Taiye: This loop might be unnecessary.
+    #else 
+     #   x.swap = MILD
+      #  x.swap_status = MILD
     end
     
 end
 export move_to_pre
+# Checkpoint
 
 function testing_infection(x::Human, teste)
     x.tested = true
