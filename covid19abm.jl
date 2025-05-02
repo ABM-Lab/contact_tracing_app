@@ -828,15 +828,17 @@ function send_notification(x::human)
 
 end
 
-function move_to_mild(x::Human)
+# Taiye: This function might be unnecessary.
+#function move_to_mild(x::Human)
     ## transfers human h to the mild infection stage for γ days
-   
-    x.health = x.swap 
-    x.health_status = x.swap_status
-    x.tis = 0 
-    x.exp = x.dur[4]
-    x.swap = REC
-    x.swap_status = REC
+ 
+ # Taiye:   
+ #   x.health = x.swap 
+  #  x.health_status = x.swap_status
+   # x.tis = 0 
+    #x.exp = x.dur[4]
+ #   x.swap = REC
+  #  x.swap_status = REC
     
     #x.swap = x.strain == 1 ? REC : REC2
     # x.iso property remains from either the latent or presymptomatic class
@@ -845,15 +847,17 @@ function move_to_mild(x::Human)
     # how many days as full contacts before self-isolation
     # NOTE: if need to count non-isolated mild people, this is overestimate as isolated people should really be in MISO all the time
     #   and not go through the mild compartment 
-    nra = 0
+   
+   # Taiye:
+   # nra = 0
     
-    if p.testing && !x.tested && x.has_app
-        testing_infection(x, p.test_ra)
-    end
+    #if p.testing && !x.tested && x.has_app
+     #   testing_infection(x, p.test_ra)
+   # end
 
-    return nra
-end
-export move_to_mild
+    #return nra
+#end
+#export move_to_mild
 
 
 function move_to_inf(x::Human)
@@ -864,12 +868,12 @@ function move_to_inf(x::Human)
     gg = findfirst(y-> x.age in y,groups)
 
     mh = [0.0002; 0.0015; 0.011; 0.0802; 0.381] # death rate for severe cases.
-    comh = 0.98
-
-    h = x.comorbidity == 1 ? comh : 0.04 #0.376
-    c = x.comorbidity == 1 ? 0.396 : 0.25
-
-    time_to_hospital = Int(round(rand(Uniform(2, 5)))) # duration symptom onset to hospitalization
+ 
+    # Taiye: The following lines might be unnecessary.
+    #comh = 0.98
+    #h = x.comorbidity == 1 ? comh : 0.04 #0.376
+    #c = x.comorbidity == 1 ? 0.396 : 0.25
+    #time_to_hospital = Int(round(rand(Uniform(2, 5)))) # duration symptom onset to hospitalization
    	
     x.health = x.swap
     x.health_status = x.swap_status
@@ -881,124 +885,131 @@ function move_to_inf(x::Human)
         testing_infection(x, p.test_ra)
     end
 
-    if rand() < h     # going to hospital or ICU but will spend delta time transmissing the disease with full contacts 
-        x.exp = time_to_hospital
-        if rand() < c
-            x.swap = ICU
-            x.swap_status = ICU
+    # This if-statement might be unnecessary.
+   # if rand() < h     # going to hospital or ICU but will spend delta time transmissing the disease with full contacts 
+    #    x.exp = time_to_hospital
+     #   if rand() < c
+      #      x.swap = ICU
+       #     x.swap_status = ICU
             
-        else
-            x.swap = HOS
-            x.swap_status = HOS
+       # else
+        #    x.swap = HOS
+         #   x.swap_status = HOS
             
-        end
+      #  end
        
-    else ## no hospital for this lucky (but severe) individual 
-        if rand() < mh[gg]
-            x.exp = x.dur[4] 
-            x.swap = DED
-            x.swap_status = DED
-        else 
-            x.exp = x.dur[4]  
-            x.swap = REC
-            x.swap_status = REC
-        end
+   # else ## no hospital for this lucky (but severe) individual 
+    #    if rand() < mh[gg]
+     #       x.exp = x.dur[4] 
+      #      x.swap = DED
+       #     x.swap_status = DED
+        #else 
+         #   x.exp = x.dur[4]  
+          #  x.swap = REC
+           # x.swap_status = REC
+        #end
          
-    end
+   # end
     ## before returning, check if swap is set 
-    x.swap == UNDEF && error("agent I -> ?")
-end
+    #x.swap == UNDEF && error("agent I -> ?")
+#end
 
-
-function move_to_hospicu(x::Human)   
+# Taiye: This function might be unnecessary.
+#function move_to_hospicu(x::Human)   
     #death prob taken from https://www.cdc.gov/nchs/nvss/vsrr/covid_weekly/index.htm#Comorbidities
     # on May 31th, 2020
     #= age_thres = [24;34;44;54;64;74;84;999]
     g = findfirst(y-> y >= x.age,age_thres) =#
     #https://www.medrxiv.org/content/10.1101/2021.08.24.21262415v1
-    aux = [0:4, 5:19, 20:44, 45:54, 55:64, 65:74, 75:84, 85:99]
+ #   aux = [0:4, 5:19, 20:44, 45:54, 55:64, 65:74, 75:84, 85:99]
    
 
-        mh = [0.001, 0.001, 0.0015, 0.0065, 0.01, 0.02, 0.0735, 0.38]
-        mc = [0.002,0.002,0.0022, 0.008, 0.022, 0.04, 0.08, 0.4]
+  #      mh = [0.001, 0.001, 0.0015, 0.0065, 0.01, 0.02, 0.0735, 0.38]
+   #     mc = [0.002,0.002,0.0022, 0.008, 0.022, 0.04, 0.08, 0.4]
 
-    gg = findfirst(y-> x.age in y,aux)
+    #gg = findfirst(y-> x.age in y,aux)
 
-    psiH = Int(round(rand(Distributions.truncated(Gamma(4.5, 2.75), 8, 17))))
-    psiC = Int(round(rand(Distributions.truncated(Gamma(4.5, 2.75), 8, 17)))) + 2
-    muH = Int(round(rand(Distributions.truncated(Gamma(5.3, 2.1), 9, 15))))
-    muC = Int(round(rand(Distributions.truncated(Gamma(5.3, 2.1), 9, 15)))) + 2
+ #   psiH = Int(round(rand(Distributions.truncated(Gamma(4.5, 2.75), 8, 17))))
+  #  psiC = Int(round(rand(Distributions.truncated(Gamma(4.5, 2.75), 8, 17)))) + 2
+   # muH = Int(round(rand(Distributions.truncated(Gamma(5.3, 2.1), 9, 15))))
+    #muC = Int(round(rand(Distributions.truncated(Gamma(5.3, 2.1), 9, 15)))) + 2
 
-    swaphealth = x.swap_status 
-    x.health = x.swap ## swap either to HOS or ICU
-    x.health_status = x.swap_status
-    x.swap = UNDEF
-    x.tis = 0
-    _set_isolation(x, true, :hosp) # do not set the isovia property here.  
+ #   swaphealth = x.swap_status 
+  #  x.health = x.swap ## swap either to HOS or ICU
+   # x.health_status = x.swap_status
+    #x.swap = UNDEF
+  #  x.tis = 0
+   # _set_isolation(x, true, :hosp) # do not set the isovia property here.  
 
-    if swaphealth == HOS
+    #if swaphealth == HOS
          
-        if rand() < mh[gg] ## person will die in the hospital 
-            x.exp = muH 
-            x.swap = DED
-            x.swap_status = DED
+     #   if rand() < mh[gg] ## person will die in the hospital 
+      #      x.exp = muH 
+       #     x.swap = DED
+        #    x.swap_status = DED
            
-        else 
-            x.exp = psiH 
-            x.swap = REC
-            x.swap_status = REC
+      #  else 
+       #     x.exp = psiH 
+        #    x.swap = REC
+         #   x.swap_status = REC
             
-        end    
-    elseif swaphealth == ICU
+      #  end    
+   # elseif swaphealth == ICU
               
-        if rand() < mc[gg] ## person will die in the ICU 
-            x.exp = muC
-            x.swap = DED
-            x.swap_status = DED
+    #    if rand() < mc[gg] ## person will die in the ICU 
+     #       x.exp = muC
+      #      x.swap = DED
+       #     x.swap_status = DED
            
-        else 
-            x.exp = psiC
-            x.swap = REC
-            x.swap_status = REC
+#        else 
+ #           x.exp = psiC
+  #          x.swap = REC
+   #         x.swap_status = REC
             
-        end
-    else
-        error("error in hosp")
-    end
+    #    end
+   # else
+    #    error("error in hosp")
+   # end
     
     ## before returning, check if swap is set 
-    x.swap == UNDEF && error("agent H -> ?")    
-end
+ #   x.swap == UNDEF && error("agent H -> ?")    
+#end
 
-function move_to_dead(h::Human)
+# Taiye: This function might not be necessary.
+#function move_to_dead(h::Human)
     # no level of alchemy will bring someone back to life. 
-    h.health = h.swap
-    h.health_status = h.swap_status
-    h.swap = UNDEF
-    h.swap_status = UNDEF
-    h.tis = 0 
-    h.exp = 999 ## stay recovered indefinitely
+ #   h.health = h.swap
+  #  h.health_status = h.swap_status
+   # h.swap = UNDEF
+ #   h.swap_status = UNDEF
+  #  h.tis = 0 
+   # h.exp = 999 ## stay recovered indefinitely
+
     #h.iso = true # a dead person is isolated
     #_set_isolation(h, true)  # do not set the isovia property here.  
     # isolation property has no effect in contact dynamics anyways (unless x == SUS)
-end
+#end
 
-function move_to_recovered(h::Human)
-    h.health = h.swap
-    h.health_status = h.swap_status
+# Taiye: Verify whether this function is necessary.
+#function move_to_recovered(h::Human)
+ #   h.health = h.swap
+  #  h.health_status = h.swap_status
     
-    h.recovered = true
+   # h.recovered = true
 
-    h.swap = UNDEF
-    h.swap_status = UNDEF
-    h.tis = 0 
-    h.exp = 999 ## stay recovered indefinitely
+ #   h.swap = UNDEF
+  #  h.swap_status = UNDEF
+   # h.tis = 0 
+    #h.exp = 999 ## stay recovered indefinitely
+
     #h.iso = false ## a recovered person has ability to meet others
    
     #h.daysinf = 999
-    h.got_inf = false
+
+    # h.got_inf = false # Taiye
+    
     # isolation property has no effect in contact dynamics anyways (unless x == SUS)
-end
+# end
 
 
 @inline function _get_betavalue(xhealth) 
@@ -1009,10 +1020,12 @@ end
     if xhealth == ASYMP
         bf = bf * p.frelasymp #0.11
 
-    elseif xhealth == MILD || xhealth == MISO 
-        bf = bf * 0.44
+# Taiye: This elseif statement might not be necessary.
+   # elseif xhealth == MILD || xhealth == MISO 
+    #    bf = bf * 0.44
 
-    elseif xhealth == INF || xhealth == IISO 
+   # Taiye: elseif xhealth == INF || xhealth == IISO 
+    elseif xhealth == INF #|| xhealth == IISO 
         bf = bf * 0.89
     end
     return bf
@@ -1039,9 +1052,10 @@ export _get_betavalue
 
     end
     
-    if x.health_status in (HOS,ICU,DED)
-        x.nextday_meetcnt = 0
-    end
+    # Taiye: This if-statement might not be necessary.
+   # if x.health_status in (HOS,ICU,DED)
+    #    x.nextday_meetcnt = 0
+   # end
    
     for i in 2:p.track_days
         x.contacts[i] = deepcopy(x.contacts[i-1])
@@ -1060,7 +1074,8 @@ function dyntrans(sys_time, grps,sim)
     pos = shuffle(1:length(humans))
     # go through every infectious person
     for x in humans[pos]        
-        if x.health_status in (PRE, ASYMP, MILD, MISO, INF, IISO)
+    # Taiye:     if x.health_status in (PRE, ASYMP, MILD, MISO, INF, IISO)
+        if x.health_status in (PRE, ASYMP, INF)
             
             xhealth = x.health
             cnts = x.nextday_meetcnt
@@ -1103,7 +1118,8 @@ function perform_contacts(x,gpw,grp_sample,xhealth)
                 
                 beta = _get_betavalue(xhealth)
                 
-            elseif y.health_status == REC && y.swap == UNDEF
+            # Taiye: Verify the inclusion of REC: elseif y.health_status == REC && y.swap == UNDEF
+            elseif y.swap == UNDEF
                             
                 beta = _get_betavalue(xhealth)
             else
