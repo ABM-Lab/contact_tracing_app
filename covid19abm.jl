@@ -1,6 +1,6 @@
 module covid19abm
 
-# Edit: 2025.05.02
+# Edit: 2025.05.03
 # Any edits that I make will include "#Taiye:".
 using Base
 using Parameters, Distributions, StatsBase, StaticArrays, Random, Match, DataFrames
@@ -95,6 +95,8 @@ Base.@kwdef mutable struct Human
     tested::Bool = false
     notified::Bool = false
     timetotest::Int64 = -1
+
+    time_since_testing::Int64 = 0
 end
 
 ## default system parameters
@@ -142,6 +144,8 @@ end
 
     time_until_testing::Int64 = 1
     #prop_working::Float64 = 0.65 #https://www.ontario.ca/document/ontario-employment-reports/april-june-2021#:~:text=Ontario's%20overall%20labour%20force%20participation,years%20and%20over%20at%2038.8%25.
+
+    time_between_tests::Int64 = 0
 end
 
 
