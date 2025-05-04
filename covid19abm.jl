@@ -1,6 +1,6 @@
 module covid19abm
 
-# Edit: 2025.05.03
+# Edit: 2025.05.04
 # Any edits that I make will include "#Taiye:".
 using Base
 using Parameters, Distributions, StatsBase, StaticArrays, Random, Match, DataFrames
@@ -269,6 +269,7 @@ function main(ip::ModelParameters,sim::Int64)
     #        if x.iso && !(x.health_status in (HOS,ICU,DED)) # Taiye: Depends on whether we are considering HOS, ICU and DED.
             if x.iso #&& !(x.health_status in (HOS,ICU,DED))
                 x.totaldaysiso += 1
+
             end
         end
         _get_model_state(st, hmatrix) ## this datacollection needs to be at the start of the for loop
@@ -277,7 +278,16 @@ function main(ip::ModelParameters,sim::Int64)
         
         # end of day
     end
-    setfield!(p,:testing,true)
+    
+    # setfield!(p,:testing,true) #Taiye: Can be returned.
+    # Taiye: Attempt at implementation.
+    for x in humans
+        if x.time_since_testing < p.time_between_tests
+            setfield!(p,:testing,false)
+        else
+            setfield!(p,:testing,true)
+        end
+    end
     # start the time loop
     for st = p.start_testing:min((p.start_testing+p.test_for-1),p.modeltime)
         
@@ -651,6 +661,8 @@ function time_update()
         x.days_after_detection += 1 #we don't care about this untill the individual is detected
         x.daysisolation += 1
         x.timetotest -= 1
+
+        x.time_since_testing += 1 # Taiye: We could measure this in days.
         
         if x.tis >= x.exp             
             @match Symbol(x.swap_status) begin
@@ -661,7 +673,7 @@ function time_update()
                 :ASYMP => begin move_to_asymp(x);  end
               # Taiye:  :MILD => begin nra+=move_to_mild(x); end
               
-              Taiye:   :INF  => begin move_to_inf(x); end    
+                :INF  => begin move_to_inf(x); end    
               
               # Taiye:   :HOS  => begin move_to_hospicu(x); end 
               # Taiye:   :ICU  => begin move_to_hospicu(x); end
@@ -828,6 +840,8 @@ function send_notification(x::human)
     for i in v
         humans[i].notified = true
         humans[i].timetotest = p.time_until_testing
+
+        humans[i].time_since_testing = p.time_between_tests # Taiye
     end
 
 end
