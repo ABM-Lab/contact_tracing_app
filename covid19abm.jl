@@ -1,5 +1,10 @@
 module covid19abm
 
+# Thomas:
+# - parameter how many tests someone will perform after notification (if negative)
+# - if someone tested negative, they will test again and again until the number is reached or is positive
+# - be careful: new notification cannot set the times to zero if someone is in a series of testing
+
 # Edit: 2025.05.05
 # Any edits that I make will include "#Taiye:".
 using Base
@@ -91,10 +96,10 @@ Base.@kwdef mutable struct Human
     has_app::Bool = false
     contacts::Vector{Vector{Int16}} = [[0; 0]]
     ncontacts_day::Int8 = 0
-    tested::Bool = false
+    testedpos::Bool = false
     notified::Bool = false
     timetotest::Int64 = -1
-
+    n_tests_perf::Int64 = 0
     time_since_testing::Int64 = 0
 end
 
@@ -143,7 +148,7 @@ end
 
     time_until_testing::Int64 = 1
     #prop_working::Float64 = 0.65 #https://www.ontario.ca/document/ontario-employment-reports/april-june-2021#:~:text=Ontario's%20overall%20labour%20force%20participation,years%20and%20over%20at%2038.8%25.
-
+    n_tests::Int64 = 2
     time_between_tests::Int64 = 0
 end
 
@@ -280,13 +285,14 @@ function main(ip::ModelParameters,sim::Int64)
     
     # setfield!(p,:testing,true) #Taiye: Can be returned.
     # Taiye: Attempt at implementation.
-    for x in humans
-        if x.time_since_testing < p.time_between_tests
-            setfield!(p,:testing,false)
-        else
+    #? Thomas: we cannot use this
+    # for x in humans
+    #     if x.time_since_testing < p.time_between_tests
+    #         setfield!(p,:testing,false)
+    #     else
             setfield!(p,:testing,true)
-        end
-    end
+    #     end
+    # end
     # start the time loop
     for st = p.start_testing:min((p.start_testing+p.test_for-1),p.modeltime)
         
@@ -561,7 +567,7 @@ function initialize()
         #x.dur = sample_epi_durations() # sample epi periods   
       
       #  x.comorbidity = comorbidity(x.age) # Taiye: We are not considering comorbidities at this stage.
-      
+        x.time_since_testing = p.time_between_tests
         # initialize the next day counts (this is important in initialization since dyntrans runs first)
         x.contacts = repeat([[0]], p.track_days)
         
@@ -645,9 +651,14 @@ function time_update()
     
     if p.testing
         for x in humans
-            if x.notified && x.timetotest == 0
+            if x.notified && x.n_tests_perf < p.n_tests && x.timetotest == 0 && x.time_since_testing >= p.time_between_tests
                 testing_infection(x, p.test_ra)
-                x.notified = false
+                
+                x.time_since_testing = 0
+                x.n_tests_perf += 1
+                if x.n_tests_perf == p.n_tests
+                    x.notified = false
+                end
             end
         end
     end
@@ -663,6 +674,7 @@ function time_update()
 
         x.time_since_testing += 1 # Taiye: We could measure this in days.
         
+
         if x.tis >= x.exp             
             @match Symbol(x.swap_status) begin
                 :LAT  => begin 
@@ -687,9 +699,9 @@ function time_update()
         # if x.iso && x.daysisolation >= p.isolation_days && !(x.health_status in (HOS,ICU,DED))
         if x.iso && x.daysisolation >= p.isolation_days # && !(x.health_status in (HOS,ICU,DED)) # Taiye
             _set_isolation(x,false,:null)
-            if x.tested # if the individual was tested and the days of isolation is finished, we can return the tested to false
-                x.tested = false
-            end
+            # if x.testedpos # if the individual was tested and the days of isolation is finished, we can return the tested to false
+            #     x.testedpos = false
+            # end
         end
         # run covid-19 functions for other integrated dynamics. 
         #ct_dynamics(x)
@@ -825,9 +837,9 @@ export move_to_pre
 # Checkpoint
 
 function testing_infection(x::Human, teste)
-    x.tested = true
     pp = _get_prob_test(x,teste)
     if rand() < pp
+        x.testedpos = true
         _set_isolation(x, true, :test)
         send_notification(x)
     end
@@ -840,7 +852,7 @@ function send_notification(x::human)
         humans[i].notified = true
         humans[i].timetotest = p.time_until_testing
 
-        humans[i].time_since_testing = p.time_between_tests # Taiye
+        #humans[i].time_since_testing = 0#p.time_between_tests # Taiye
     end
 
 end
@@ -898,8 +910,11 @@ function move_to_inf(x::Human)
     
     x.tis = 0 
     
-    if p.testing && !x.tested && x.has_app
-        testing_infection(x, p.test_ra)
+    #? Thomas:
+    if p.testing && !x.testedpos && x.has_app
+        #testing_infection(x, p.test_ra)
+        x.notified = true
+        humans[i].timetotest = 1
     end
 
     # This if-statement might be unnecessary.
