@@ -1,6 +1,6 @@
 module covid19abm
 
-# Edit: 2025.05.04
+# Edit: 2025.05.05
 # Any edits that I make will include "#Taiye:".
 using Base
 using Parameters, Distributions, StatsBase, StaticArrays, Random, Match, DataFrames
@@ -31,8 +31,7 @@ Base.@kwdef mutable struct Human
     dur::NTuple{4, Int8} = (0, 0, 0, 0)   # Order: (latents, asymps, pres, infs) TURN TO NAMED TUPS LATER
     doi::Int16   = 999   # day of infection.
     iso::Bool = false  ## isolated (limited contacts)
-    # isovia::Symbol = :null ## isolated via quarantine (:qu), preiso (:pi), intervention measure (:im), or contact tracing (:ct)    
-    # Taiye: I do not think that this category is necessary because we are assuming that individuals will isolate solely through contact tracing.
+    isovia::Symbol = :null ## isolated via quarantine (:qu), preiso (:pi), intervention measure (:im), or contact tracing (:ct)    
     
     #comorbidity::Int8 = 0 ##does the individual has any comorbidity?
     # Taiye: We are not considering comorbidities at this stage.
