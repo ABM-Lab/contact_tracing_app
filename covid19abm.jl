@@ -1,19 +1,28 @@
 module covid19abm
 
+<<<<<<< HEAD
 # Edit: 2025.05.05
+=======
+# Thomas:
+# - parameter how many tests someone will perform after notification (if negative)
+# - if someone tested negative, they will test again and again until the number is reached or is positive
+# - be careful: new notification cannot set the times to zero if someone is in a series of testing
+
+# Edit: 2025.05.16
+>>>>>>> 4b224fc726a13cfe24697ce0ace0535cc638f2bf
 # Any edits that I make will include "#Taiye:".
 using Base
 using Parameters, Distributions, StatsBase, StaticArrays, Random, Match, DataFrames
 # @enum HEALTH SUS LAT PRE ASYMP MILD MISO INF IISO HOS ICU REC DED UNDEF
-@enum HEALTH SUS LAT PRE ASYMP INF UNDEF # Taiye: MILD MISO IISO HOS ICU REC DED
+@enum HEALTH SUS LAT PRE ASYMP INF REC DED UNDEF # Taiye: MILD MISO IISO HOS ICU
 # Taiye: I commented out hospital and ICU patients because my understanding is that the tests
 # should be self-administered. Seyed also pointed out that their inclusion would overcomplicate 
 # the model. Consequently, MILD, MISO and IISO are also removed because the severity of the 
 # symptoms is not relevant.
-# Taiye: Deceased and recovered individuals will not report the virus. 
 # Taiye: If we assume that the disease can be contracted more than once, recovered individuals
 # could be included in the symptomatic class and otherwise, removed from the population. We could
 # create a REM (removed) class for these two groups.
+# Taiye (update): Recovered individuals will still be considered contacts. We also want to record the individuals that are deceased.
 
 Base.@kwdef mutable struct Human
     idx::Int64 = 0 
@@ -32,7 +41,11 @@ Base.@kwdef mutable struct Human
     doi::Int16   = 999   # day of infection.
     iso::Bool = false  ## isolated (limited contacts)
     isovia::Symbol = :null ## isolated via quarantine (:qu), preiso (:pi), intervention measure (:im), or contact tracing (:ct)    
+<<<<<<< HEAD
     
+=======
+        
+>>>>>>> 4b224fc726a13cfe24697ce0ace0535cc638f2bf
     #comorbidity::Int8 = 0 ##does the individual has any comorbidity?
     # Taiye: We are not considering comorbidities at this stage.
 
@@ -53,7 +66,7 @@ Base.@kwdef mutable struct Human
     #strain::Int16 = -1
     index_day::Int16 = 1
    
-    recovered::Bool = false # Taiye: This might not be necessary.
+    recovered::Bool = false 
     # vaccine::Symbol = :none
     # vaccine_n::Int16 = 0
     # protected::Int16 = 0
@@ -69,33 +82,34 @@ Base.@kwdef mutable struct Human
 
     #### for testing
 
-    # daysisolation::Int64 = 999 # Taiye: This might not be necessary.
+    daysisolation::Int64 = 999 
 
     # days_after_detection::Int64 = 999
     # positive::Bool = false
 
-    # daysinf::Int64 = 999 # Taiye: This might not be necessary.
+    daysinf::Int64 = 999 
 
-    # tookpcr::Bool = false # Taiye: We are assuming that once the notification is received, an individual will test.
+    tookpcr::Bool = false
     
     nra::Int16 = 0
     pcrprob::Float64 = 0.0
     test::Bool = false
 
-    # isofalse::Bool = false
-    # Taiye: I believe that this might be unnecessary since we are assuming that individuals isolate upon testing positive.
-
+    isofalse::Bool = false
+    
     # proportion_contacts_workplace::Float64 = 0.0
 
     totaldaysiso::Int32 = 0  
     has_app::Bool = false
     contacts::Vector{Vector{Int16}} = [[0; 0]]
     ncontacts_day::Int8 = 0
-    tested::Bool = false
+    testedpos::Bool = false
     notified::Bool = false
     timetotest::Int64 = -1
-
+    n_tests_perf::Int64 = 0
     time_since_testing::Int64 = 0
+
+    n_neg_tests::Int64 = 0 # Taiye
 end
 
 ## default system parameters
@@ -138,13 +152,15 @@ end
     isolation_days::Int64 = 5
     ageintapp::Vector{Int64} = [10; 60]
     ##for testing
-    # test_ra::Int64 = 0 #1 - PCR, 2 - Abbott_PanBio 3 - 	BD VERITO	4 - SOFIA
+    test_ra::Int64 = 0 #1 - PCR, 2 - Abbott_PanBio 3 - 	BD VERITO	4 - SOFIA
     # Taiye: I believe that PCR tests are the only ones being considered.
 
     time_until_testing::Int64 = 1
     #prop_working::Float64 = 0.65 #https://www.ontario.ca/document/ontario-employment-reports/april-june-2021#:~:text=Ontario's%20overall%20labour%20force%20participation,years%20and%20over%20at%2038.8%25.
-
+    n_tests::Int64 = 2
     time_between_tests::Int64 = 0
+
+    #n_neg_tests::Int64 = 0 # Taiye
 end
 
 
@@ -266,7 +282,7 @@ function main(ip::ModelParameters,sim::Int64)
         
         for x in humans
     #        if x.iso && !(x.health_status in (HOS,ICU,DED)) # Taiye: Depends on whether we are considering HOS, ICU and DED.
-            if x.iso #&& !(x.health_status in (HOS,ICU,DED))
+            if x.iso && !(x.health_status in (DED)) #&& !(x.health_status in (HOS,ICU,DED))
                 x.totaldaysiso += 1
 
             end
@@ -278,21 +294,25 @@ function main(ip::ModelParameters,sim::Int64)
         # end of day
     end
     
-    # setfield!(p,:testing,true) #Taiye: Can be returned.
+    setfield!(p,:testing,true) 
+
     # Taiye: Attempt at implementation.
-    for x in humans
-        if x.time_since_testing < p.time_between_tests
-            setfield!(p,:testing,false)
-        else
-            setfield!(p,:testing,true)
-        end
-    end
+    #? Thomas: we cannot use this
+    # for x in humans
+    #     if x.time_since_testing < p.time_between_tests
+    #         setfield!(p,:testing,false)
+    #     else
+            #setfield!(p,:testing,true)
+    #     end
+    # end
+
+
     # start the time loop
     for st = p.start_testing:min((p.start_testing+p.test_for-1),p.modeltime)
         
         for x in humans
             # if x.iso && !(x.health_status in (HOS,ICU,DED)) # Taiye: Depends on whether we are considering HOS, ICU and DED.
-            if x.iso #&& !(x.health_status in (HOS,ICU,DED))
+            if x.iso && !(x.health_status in (DED))
                 x.totaldaysiso += 1
             end
         end
@@ -310,7 +330,7 @@ function main(ip::ModelParameters,sim::Int64)
         initial_dw = st+(p.initial_day_week-1)-7*Int(floor((st-1+(p.initial_day_week-1))/7))
         for x in humans
             # if x.iso && !(x.health_status in (HOS,ICU,DED)) # Taiye: Depends on whether we are considering HOS, ICU and DED.
-            if x.iso #&& !(x.health_status in (HOS,ICU,DED))
+            if x.iso && !(x.health_status in (DED)) #&& !(x.health_status in (HOS,ICU,DED))
                 x.totaldaysiso += 1
                 
             end
@@ -561,7 +581,7 @@ function initialize()
         #x.dur = sample_epi_durations() # sample epi periods   
       
       #  x.comorbidity = comorbidity(x.age) # Taiye: We are not considering comorbidities at this stage.
-      
+        x.time_since_testing = p.time_between_tests
         # initialize the next day counts (this is important in initialization since dyntrans runs first)
         x.contacts = repeat([[0]], p.track_days)
         
@@ -616,12 +636,12 @@ function insert_infected(health, num, ag)
                     x.wentto = 2
                     move_to_asymp(x)
                 
-                # Taiye: Confirm whether recovered and deceased individuals should be considered.    
-                #elseif health == REC 
-                 #   x.swap = health
-                  #  x.swap_status = REC
-                   # x.wentto = rand(1:2)
-                    #move_to_recovered(x)
+                
+                elseif health == REC 
+                    x.swap = health
+                    x.swap_status = REC
+                    x.wentto = rand(1:2)
+                    move_to_recovered(x)
 
                 else 
                     error("can not insert human of health $(health)")
@@ -645,9 +665,14 @@ function time_update()
     
     if p.testing
         for x in humans
-            if x.notified && x.timetotest == 0
+            if x.notified && x.n_tests_perf <= p.n_tests && x.timetotest == 0 && x.time_since_testing >= p.time_between_tests && x.n_neg_tests <= x.n_tests_perf # Taiye
                 testing_infection(x, p.test_ra)
-                x.notified = false
+                
+                x.time_since_testing = 0
+                x.n_tests_perf += 1
+                if x.n_tests_perf == p.n_tests
+                    x.notified = false
+                end
             end
         end
     end
@@ -663,6 +688,7 @@ function time_update()
 
         x.time_since_testing += 1 # Taiye: We could measure this in days.
         
+
         if x.tis >= x.exp             
             @match Symbol(x.swap_status) begin
                 :LAT  => begin 
@@ -676,20 +702,24 @@ function time_update()
               
               # Taiye:   :HOS  => begin move_to_hospicu(x); end 
               # Taiye:   :ICU  => begin move_to_hospicu(x); end
-              # Taiye:   :REC  => begin move_to_recovered(x); end
-              # Taiye:   :DED  => begin move_to_dead(x); end
+                :REC  => begin move_to_recovered(x); end
+                :DED  => begin move_to_dead(x); end
                 _    => begin dump(x); error("swap expired, but no swap set."); end
             end
         end
         #if the individual recovers, we need to set they free. This loop must be here
 
-        # Taiye: Confirm whether recovered individuals can contract the virus more than once. This loop might be unnecessary.
         # if x.iso && x.daysisolation >= p.isolation_days && !(x.health_status in (HOS,ICU,DED))
-        if x.iso && x.daysisolation >= p.isolation_days # && !(x.health_status in (HOS,ICU,DED)) # Taiye
+        if x.iso && x.daysisolation >= p.isolation_days && !(x.health_status in (DED)) 
             _set_isolation(x,false,:null)
-            if x.tested # if the individual was tested and the days of isolation is finished, we can return the tested to false
-                x.tested = false
-            end
+            
+            x.n_tests_perf = 0 # Taiye
+            x.n_neg_tests = 0 # Taiye
+
+            # if x.testedpos # if the individual was tested and the days of isolation is finished, we can return the tested to false
+            #     x.testedpos = false
+            # end
+            
         end
         # run covid-19 functions for other integrated dynamics. 
         #ct_dynamics(x)
@@ -786,9 +816,8 @@ function move_to_asymp(x::Human)
     x.tis = 0 
     x.exp = x.dur[2] # get the presymptomatic period
    
-# Taiye: The swap to REC might be unncessary.
-    #x.swap = REC
-    #x.swap_status = REC
+    x.swap = REC
+    x.swap_status = REC
     
     # x.iso property remains from either the latent or presymptomatic class
     # if x.iso is true, the asymptomatic individual has limited contacts
@@ -822,25 +851,30 @@ function move_to_pre(x::Human)
     
 end
 export move_to_pre
-# Checkpoint
 
 function testing_infection(x::Human, teste)
-    x.tested = true
     pp = _get_prob_test(x,teste)
     if rand() < pp
+        x.testedpos = true
         _set_isolation(x, true, :test)
-        send_notification(x)
+
+        send_notifications(x)
+
+    else # Taiye: counting the number of negative tests performed.
+          x.n_neg_tests += 1
     end
+
 end
 
 function send_notification(x::human)
     v = vcat(x.contacts...)
-
+    
     for i in v
-        humans[i].notified = true
-        humans[i].timetotest = p.time_until_testing
-
-        humans[i].time_since_testing = p.time_between_tests # Taiye
+        if humans[i].notified == false # Taiye: To avoid new notifications resetting times.
+            humans[i].notified = true
+            humans[i].timetotest = p.time_until_testing
+        end
+        #humans[i].time_since_testing = 0#p.time_between_tests # Taiye
     end
 
 end
@@ -898,8 +932,11 @@ function move_to_inf(x::Human)
     
     x.tis = 0 
     
-    if p.testing && !x.tested && x.has_app
-        testing_infection(x, p.test_ra)
+    #? Thomas:
+    if p.testing && !x.testedpos && x.has_app
+        #testing_infection(x, p.test_ra)
+        x.notified = true
+        humans[i].timetotest = 1
     end
 
     # This if-statement might be unnecessary.
@@ -916,15 +953,15 @@ function move_to_inf(x::Human)
       #  end
        
    # else ## no hospital for this lucky (but severe) individual 
-    #    if rand() < mh[gg]
-     #       x.exp = x.dur[4] 
-      #      x.swap = DED
-       #     x.swap_status = DED
-        #else 
-         #   x.exp = x.dur[4]  
-          #  x.swap = REC
-           # x.swap_status = REC
-        #end
+    if rand() < mh[gg]
+            x.exp = x.dur[4] 
+            x.swap = DED
+            x.swap_status = DED
+    else 
+            x.exp = x.dur[4]  
+            x.swap = REC
+            x.swap_status = REC
+    end
          
    # end
     ## before returning, check if swap is set 
@@ -992,41 +1029,39 @@ end
  #   x.swap == UNDEF && error("agent H -> ?")    
 #end
 
-# Taiye: This function might not be necessary.
-#function move_to_dead(h::Human)
+function move_to_dead(h::Human)
     # no level of alchemy will bring someone back to life. 
- #   h.health = h.swap
-  #  h.health_status = h.swap_status
-   # h.swap = UNDEF
- #   h.swap_status = UNDEF
-  #  h.tis = 0 
-   # h.exp = 999 ## stay recovered indefinitely
+    h.health = h.swap
+    h.health_status = h.swap_status
+    h.swap = UNDEF
+    h.swap_status = UNDEF
+    h.tis = 0 
+    h.exp = 999 ## stay recovered indefinitely
 
-    #h.iso = true # a dead person is isolated
-    #_set_isolation(h, true)  # do not set the isovia property here.  
+   # h.iso = true # a dead person is isolated
+   # _set_isolation(h, true)  # do not set the isovia property here.  
     # isolation property has no effect in contact dynamics anyways (unless x == SUS)
-#end
+end
 
-# Taiye: Verify whether this function is necessary.
-#function move_to_recovered(h::Human)
- #   h.health = h.swap
-  #  h.health_status = h.swap_status
+function move_to_recovered(h::Human)
+    h.health = h.swap
+    h.health_status = h.swap_status
     
-   # h.recovered = true
+    h.recovered = true
 
- #   h.swap = UNDEF
-  #  h.swap_status = UNDEF
-   # h.tis = 0 
-    #h.exp = 999 ## stay recovered indefinitely
+    h.swap = UNDEF
+    h.swap_status = UNDEF
+    h.tis = 0 
+    h.exp = 999 ## stay recovered indefinitely
 
     #h.iso = false ## a recovered person has ability to meet others
    
     #h.daysinf = 999
 
-    # h.got_inf = false # Taiye
+    h.got_inf = false 
     
     # isolation property has no effect in contact dynamics anyways (unless x == SUS)
-# end
+end
 
 
 @inline function _get_betavalue(xhealth) 
@@ -1061,7 +1096,7 @@ export _get_betavalue
         cnt = rand(negative_binomials(ag,aux)) ##using the contact average for shelter-in
         
         x.nextday_meetcnt = cnt
-    elseif !(x.health_status  in (HOS,ICU,DED))
+    # elseif !(x.health_status  in (HOS,ICU,DED)) # Taiye
         cnt = rand(negative_binomials_shelter(ag,p.contact_change_2))  # expensive operation, try to optimize
         x.nextday_meetcnt_w = 0
         x.nextday_meetcnt = cnt
@@ -1069,10 +1104,14 @@ export _get_betavalue
 
     end
     
-    # Taiye: This if-statement might not be necessary.
-   # if x.health_status in (HOS,ICU,DED)
-    #    x.nextday_meetcnt = 0
-   # end
+    if x.health_status in (DED)
+        x.nextday_meetcnt = 0
+    end
+
+    # if x.health_status in (HOS,ICU,DED) # Taiye
+    if x.health_status in (DED)
+        x.nextday_meetcnt = 0
+    end
    
     for i in 2:p.track_days
         x.contacts[i] = deepcopy(x.contacts[i-1])
@@ -1135,7 +1174,8 @@ function perform_contacts(x,gpw,grp_sample,xhealth)
                 
                 beta = _get_betavalue(xhealth)
                 
-            # Taiye: Verify the inclusion of REC: elseif y.health_status == REC && y.swap == UNDEF
+            elseif y.health_status == REC && y.swap == UNDEF
+
             elseif y.swap == UNDEF
                             
                 beta = _get_betavalue(xhealth)
