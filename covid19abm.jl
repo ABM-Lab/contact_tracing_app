@@ -5,8 +5,19 @@ module covid19abm
 # - if someone tested negative, they will test again and again until the number is reached or is positive
 # - be careful: new notification cannot set the times to zero if someone is in a series of testing
 
-# Edit: 2025.05.22
+# Edit: 2025.05.23
 # Any edits that I make will include "#Taiye:".
+
+# Taiye (2025.05.22):
+import Pkg
+Pkg.add("Parameters")
+Pkg.add("DataFrames")
+Pkg.add("Distributions")
+Pkg.add("StatsBase")
+Pkg.add("StaticArrays")
+Pkg.add("Match")
+Pkg.add("Random")
+
 using Base
 using Parameters, Distributions, StatsBase, StaticArrays, Random, Match, DataFrames
 # @enum HEALTH SUS LAT PRE ASYMP MILD MISO INF IISO HOS ICU REC DED UNDEF
@@ -859,13 +870,14 @@ function testing_infection(x::Human, teste)
 
 end
 
-function send_notification(x::human)
+function send_notification(x::Human) # Taiye (2025.05.22): added an 's' to 'human'; Update: 'humans' -> 'Human'
     v = vcat(x.contacts...)
     
     for i in v
-        if humans[i].notified == false # Taiye: To avoid new notifications resetting times.
-            humans[i].notified = true
-            humans[i].timetotest = p.time_until_testing
+        # Taiye (2025.05.23): Changed humans[i] to v[i] in each case.
+        if v[i].notified == false # Taiye: To avoid new notifications resetting times.
+            v[i].notified = true
+            v[i].timetotest = p.time_until_testing
         end
         #humans[i].time_since_testing = 0#p.time_between_tests # Taiye
     end
