@@ -232,7 +232,8 @@ function runsim(simnum, ip::ModelParameters)
     #wiso = map(y-> sum([ii.totaldaysiso for ii in humans[y]]),workiso_gr)
 
     return (a=all1, g1=ag1, g2=ag2, g3=ag3, g4=ag4, g5=ag5,g6=ag6,g7=ag7, work = work,
-    vector_dead=vector_ded,nra=nra,npcr=npcr, R0 = R01, niso_t_p=niso_t_p, nleft=nleft,giso = giso, wiso = wiso)
+    # Taiye: vector_dead=vector_ded,nra=nra,npcr=npcr, R0 = R01, niso_t_p=niso_t_p, nleft=nleft,giso = giso, wiso = wiso)
+    vector_dead=vector_ded,nra=nra,npcr=npcr, R0 = R01, nleft=nleft,giso = giso)
 end
 export runsim
 
