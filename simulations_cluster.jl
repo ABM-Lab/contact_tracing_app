@@ -8,7 +8,7 @@ Pkg.add("Query")
 Pkg.add("ClusterManagers")
 Pkg.add("Dates")
 Pkg.add("DelimitedFiles")
-Pkg.add("SlurmClusterManager")
+#Pkg.add("SlurmClusterManager")
 
 
 using Distributed
@@ -17,7 +17,7 @@ using DataFrames
 using CSV,Statistics,Query,ClusterManagers
 using Dates
 using DelimitedFiles
-using SlurmClusterManager # Taiye (2025.05.23)
+#using SlurmClusterManager # Taiye (2025.05.23)
 
 ## load the packages by covid19abm
 
@@ -30,7 +30,7 @@ using SlurmClusterManager # Taiye (2025.05.23)
 
 # Taiye (2025.06.01): Return addprocs when connecting to the cluster
 # Taiye (Use half cluster for testing): addprocs(ClusterManagers.SlurmManager(500), N=16, topology=:master_worker, exeflags = "--project=.")
-addprocs(ClusterManagers.SlurmManager(250), N=8, topology=:master_worker, exeflags = "--project=.")
+addprocs(SlurmManager(250), N=8, topology=:master_worker, exeflags = "--project=.")
 @everywhere using Parameters, Distributions, StatsBase, StaticArrays, Random, Match, DataFrames
 @everywhere include("covid19abm.jl")
 @everywhere const cv=covid19abm
