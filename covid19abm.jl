@@ -5,7 +5,7 @@ module covid19abm
 # - if someone tested negative, they will test again and again until the number is reached or is positive
 # - be careful: new notification cannot set the times to zero if someone is in a series of testing
 
-# Edit: 2025.06.06
+# Edit: 2025.06.09
 # Any edits that I make will include "#Taiye:".
 
 # Taiye (2025.05.27):
@@ -113,6 +113,7 @@ Base.@kwdef mutable struct Human
     time_since_testing::Int64 = 0
 
     n_neg_tests::Int64 = 0 # Taiye
+
 end
 
 ## default system parameters
@@ -355,16 +356,22 @@ function main(ip::ModelParameters,sim::Int64)
 end
 export main
 
+# Taiye (2025.06.09): We are not considering workplaces.
 ##### creating workplaces
-function work_size() #https://www150.statcan.gc.ca/t1/tbl1/en/cv.action?pid=3310039501
-    breaks = [1:4,5:9,10:19,20:49,50:99,100:199,200:499,500:1000]
-    #s = [748387, 233347, 152655, 99732, 32889, 14492, 7119, 2803]
+
+# Taiye (2025.06.09)
+#function work_size() #https://www150.statcan.gc.ca/t1/tbl1/en/cv.action?pid=3310039501
+ #   breaks = [1:4,5:9,10:19,20:49,50:99,100:199,200:499,500:1000]
+  
+ #s = [748387, 233347, 152655, 99732, 32889, 14492, 7119, 2803]
     #s/=sum(s)
    # s = [0.5795052593106524,0.18068968828208243,0.11820672374061501,0.07722637956240554,0.025467236167207672,0.01122172113883589,0.00551251951334341,0.0021704722848576454]
-    aux = Distributions.Categorical(@SVector [0.5795052593106524,0.18068968828208243,0.11820672374061501,0.07722637956240554,0.025467236167207672,0.01122172113883589,0.00551251951334341,0.0021704722848576454])
+   
+   # Taiye (2025.06.09)
+   #aux = Distributions.Categorical(@SVector [0.5795052593106524,0.18068968828208243,0.11820672374061501,0.07722637956240554,0.025467236167207672,0.01122172113883589,0.00551251951334341,0.0021704722848576454])
 
-    return aux,breaks
-end
+    #return aux,breaks
+#end
 
 
 function dist_app(humans, p)
@@ -779,8 +786,12 @@ function sample_epi_durations(y::Human)
     y.incubationp = latents
     pres = Int.(round.(rand(pre_dist)))
     latents = latents - pres # ofcourse substract from latents, the presymp periods
-    asymps = max(Int.(ceil.(rand(asy_dist)))-aux,1)
-    infs = max(Int.(ceil.(rand(inf_dist)))-aux,1)
+    
+    # Taiye (2025.06.09): Removing aux.
+    asymps = max(Int.(ceil.(rand(asy_dist))),1)
+    infs = max(Int.(ceil.(rand(inf_dist))),1)
+    #asymps = max(Int.(ceil.(rand(asy_dist)))-aux,1)
+    #infs = max(Int.(ceil.(rand(inf_dist)))-aux,1)
 
     return (latents, asymps, pres, infs)
 end
