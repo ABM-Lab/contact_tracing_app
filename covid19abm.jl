@@ -425,9 +425,13 @@ function _collectdf(hmatrix)
     #_names_inci = Symbol.(["lat_inc", "mild_inc", "miso_inc", "inf_inc", "iiso_inc", "hos_inc", "icu_inc", "rec_inc", "ded_inc"])    
     #_names_prev = Symbol.(["sus", "lat", "mild", "miso", "inf", "iiso", "hos", "icu", "rec", "ded"])
     mdf_inc, mdf_prev = _get_incidence_and_prev(hmatrix)
-    mdf = hcat(mdf_inc, mdf_prev)    
-    _names_inc = Symbol.(string.((Symbol.(instances(HEALTH)[1:end - 1])), "_INC"))
-    _names_prev = Symbol.(string.((Symbol.(instances(HEALTH)[1:end - 1])), "_PREV"))
+    mdf = hcat(mdf_inc, mdf_prev) 
+    
+    # Taiye (2025.06.09): Replacing instances with iterate.
+    _names_inc = Symbol.(string.((Symbol.(iterate(HEALTH)[1:end - 1])), "_INC"))
+    _names_prev = Symbol.(string.((Symbol.(iterate(HEALTH)[1:end - 1])), "_PREV"))
+    # _names_inc = Symbol.(string.((Symbol.(instances(HEALTH)[1:end - 1])), "_INC"))
+   # _names_prev = Symbol.(string.((Symbol.(instances(HEALTH)[1:end - 1])), "_PREV"))
     _names = vcat(_names_inc..., _names_prev...)
     datf = DataFrame(mdf, _names)
     insertcols!(datf, 1, :time => 1:p.modeltime) ## add a time column to the resulting dataframe
