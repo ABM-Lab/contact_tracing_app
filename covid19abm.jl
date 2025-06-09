@@ -428,10 +428,10 @@ function _collectdf(hmatrix)
     mdf = hcat(mdf_inc, mdf_prev) 
     
     # Taiye (2025.06.09): Replacing instances with iterate.
-    _names_inc = Symbol.(string.((Symbol.(iterate(HEALTH)[1:end - 1])), "_INC"))
-    _names_prev = Symbol.(string.((Symbol.(iterate(HEALTH)[1:end - 1])), "_PREV"))
-    # _names_inc = Symbol.(string.((Symbol.(instances(HEALTH)[1:end - 1])), "_INC"))
-   # _names_prev = Symbol.(string.((Symbol.(instances(HEALTH)[1:end - 1])), "_PREV"))
+    #_names_inc = Symbol.(string.((Symbol.(iterate(HEALTH)[1:end - 1])), "_INC"))
+    #_names_prev = Symbol.(string.((Symbol.(iterate(HEALTH)[1:end - 1])), "_PREV"))
+    _names_inc = Symbol.(string.((Symbol.(instances(HEALTH)[1:end - 1])), "_INC"))
+    _names_prev = Symbol.(string.((Symbol.(instances(HEALTH)[1:end - 1])), "_PREV"))
     _names = vcat(_names_inc..., _names_prev...)
     datf = DataFrame(mdf, _names)
     insertcols!(datf, 1, :time => 1:p.modeltime) ## add a time column to the resulting dataframe
@@ -452,8 +452,8 @@ export _splitstate
 
 function _get_incidence_and_prev(hmatrix)
     # Taiye (2025.06.09): Replacing instances with iterate.
-    cols = iterate(HEALTH)[1:end - 1]
-    #cols = instances(HEALTH)[1:end - 1] ## don't care about the UNDEF health status
+    #cols = iterate(HEALTH)[1:end - 1]
+    cols = instances(HEALTH)[1:end - 1] ## don't care about the UNDEF health status
     inc = zeros(Int64, p.modeltime, length(cols))
     pre = zeros(Int64, p.modeltime, length(cols))
     for i = 1:length(cols)
