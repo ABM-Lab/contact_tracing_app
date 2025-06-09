@@ -1125,7 +1125,10 @@ export _get_betavalue
         x.nextday_meetcnt = cnt
     # elseif !(x.health_status  in (HOS,ICU,DED)) # Taiye
         cnt = rand(negative_binomials_shelter(ag,p.contact_change_2))  # expensive operation, try to optimize
-        x.nextday_meetcnt_w = 0
+      
+    # Taiye (2025.06.09): nextday_meetcnt_w is only used here and could refer to workplaces, which would make it unnecessary.
+      #  x.nextday_meetcnt_w = 0
+      
         x.nextday_meetcnt = cnt
     else
 
