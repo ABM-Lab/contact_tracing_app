@@ -169,7 +169,8 @@ end
     #n_neg_tests::Int64 = 0 # Taiye
 
     # Taiye (2025.06.09): Tentative contact change rates
-    contact_change_rate::Float64 = 0.50
+    contact_change_rate::Float64 = 0.80
+    contact_change_2::Float64 = 0.50
 end
 
 
