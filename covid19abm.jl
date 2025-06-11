@@ -5,7 +5,7 @@ module covid19abm
 # - if someone tested negative, they will test again and again until the number is reached or is positive
 # - be careful: new notification cannot set the times to zero if someone is in a series of testing
 
-# Edit: 2025.06.09
+# Edit: 2025.06.10
 # Any edits that I make will include "#Taiye:".
 
 # Taiye (2025.05.27):
@@ -1136,14 +1136,18 @@ export _get_betavalue
       #  x.nextday_meetcnt_w = 0
       
         x.nextday_meetcnt = cnt
-    #else
-
+    #else (Taiye 2025.06.10)
     end
     
-    if x.health_status in (DED)
+    # Taiye (2025.06.10)
+    if x.health_status == HEALTH.DED
         x.nextday_meetcnt = 0
     end
+    #if x.health_status in (DED)
+    #    x.nextday_meetcnt = 0
+    #end
 
+    # Taiye (2025.06.10)
     # if x.health_status in (HOS,ICU,DED) # Taiye
     #if x.health_status in (DED)
      #   x.nextday_meetcnt = 0
