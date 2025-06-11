@@ -1139,13 +1139,9 @@ export _get_betavalue
     #else (Taiye 2025.06.10)
     end
     
-    # Taiye (2025.06.10)
-    if x.health_status == HEALTH.DED
+    if x.health_status in (DED)
         x.nextday_meetcnt = 0
     end
-    #if x.health_status in (DED)
-    #    x.nextday_meetcnt = 0
-    #end
 
     # Taiye (2025.06.10)
     # if x.health_status in (HOS,ICU,DED) # Taiye
