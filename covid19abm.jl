@@ -338,7 +338,11 @@ function main(ip::ModelParameters,sim::Int64)
         _get_model_state(st, hmatrix) ## this datacollection needs to be at the start of the for loop
         dyntrans(st, grps,sim)
         sw = time_update() ###update the system
-        nra[st]+= sw[6]
+
+        # Taiye (2025.06.12): sw might be a scalar
+        # nra[st]+= sw[6]
+        nra[st] += sw[length(sw)]
+
         # end of day
     end
 
@@ -870,6 +874,10 @@ function move_to_pre(x::Human)
     #else
      #   error("no strain in move to pre")
     #end  # percentage of sick individuals going to mild infection stage
+
+    # Taiye (2025.06.12):
+    θ = (0.95, 0.9, 0.85, 0.6, 0.2)
+    
     x.health = x.swap
     x.health_status = x.swap_status
     x.tis = 0   # reset time in state 
