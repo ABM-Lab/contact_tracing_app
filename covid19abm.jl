@@ -171,6 +171,9 @@ end
     # Taiye (2025.06.09): Tentative contact change rates
     contact_change_rate::Float64 = 0.80
     contact_change_2::Float64 = 0.50
+
+    # Taiye (2025.06.12): Attempting to correct 'ERROR: type ModelParameters has no field testing'
+    testing::Bool = false
 end
 
 
@@ -288,7 +291,7 @@ function main(ip::ModelParameters,sim::Int64)
     
     # distributing app_coverage
     dist_app(humans, p)
-
+     
     # start the time loop
     for st = 1:min((p.start_testing-1),p.modeltime)
         
