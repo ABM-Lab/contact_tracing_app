@@ -90,6 +90,9 @@ Base.@kwdef mutable struct Human
     # days_after_detection::Int64 = 999
     # positive::Bool = false
 
+    # Taiye (2025.06.12):
+    days_after_detection::Int64 = 0
+
     daysinf::Int64 = 999 
 
     tookpcr::Bool = false
