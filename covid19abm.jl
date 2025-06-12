@@ -214,8 +214,10 @@ function runsim(simnum, ip::ModelParameters)
     #ags = [x.ag_new for x in humans] # store a vector of the age group distribution 
     
     all1 = _collectdf(hmatrix)
-    spl = _splitstate(hmatrix, ags)
-    work = _collectdf(spl[1])
+
+    # Taiye (2025.06.12): We are not considering workplaces
+    #spl = _splitstate(hmatrix, ags)
+    #work = _collectdf(spl[1])
     
     age_groups = [0:14, 15:24, 25:34, 35:44, 45:54, 55:64, 65:999]
     ags = map(x->findfirst(y-> x.age in y, age_groups),humans) # store a vector of the age group distribution 
@@ -229,7 +231,9 @@ function runsim(simnum, ip::ModelParameters)
     ag7 = _collectdf(spl[7])
     insertcols!(all1, 1, :sim => simnum); insertcols!(ag1, 1, :sim => simnum); insertcols!(ag2, 1, :sim => simnum); 
     insertcols!(ag3, 1, :sim => simnum); insertcols!(ag4, 1, :sim => simnum); insertcols!(ag5, 1, :sim => simnum);
-    insertcols!(ag6, 1, :sim => simnum); insertcols!(ag7, 1, :sim => simnum); insertcols!(work, 1, :sim => simnum);
+    
+    # Taiye (2025.06.12): We are not considering workplaces.
+    #insertcols!(ag6, 1, :sim => simnum); insertcols!(ag7, 1, :sim => simnum); insertcols!(work, 1, :sim => simnum);
     
 
     pos = findall(y-> y in (11,22,33),hmatrix[:,end])
@@ -248,8 +252,9 @@ function runsim(simnum, ip::ModelParameters)
     giso = map(y-> sum([ii.totaldaysiso for ii in humans[y]]),geniso_gr)
     #wiso = map(y-> sum([ii.totaldaysiso for ii in humans[y]]),workiso_gr)
 
-    return (a=all1, g1=ag1, g2=ag2, g3=ag3, g4=ag4, g5=ag5,g6=ag6,g7=ag7, work = work,
-    # Taiye: vector_dead=vector_ded,nra=nra,npcr=npcr, R0 = R01, niso_t_p=niso_t_p, nleft=nleft,giso = giso, wiso = wiso)
+    # Taiye (2025.06.12):
+    # return (a=all1, g1=ag1, g2=ag2, g3=ag3, g4=ag4, g5=ag5,g6=ag6,g7=ag7, work = work,vector_dead=vector_ded,nra=nra,npcr=npcr, R0 = R01, niso_t_p=niso_t_p, nleft=nleft,giso = giso, wiso = wiso)
+    return (a=all1, g1=ag1, g2=ag2, g3=ag3, g4=ag4, g5=ag5,g6=ag6,g7=ag7,
     vector_dead=vector_ded,nra=nra,R0 = R01, giso = giso)
 end
 export runsim
