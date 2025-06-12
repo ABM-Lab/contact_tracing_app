@@ -177,6 +177,9 @@ end
 
     # Taiye (2025.06.12): Attempting to correct 'ERROR: type ModelParameters has no field testing'
     testing::Bool = false
+
+    # Taiye (2025.06.12): Defining initial_day_week.
+    initial_day_week::Int64 = 1
 end
 
 
