@@ -5,7 +5,7 @@ module covid19abm
 # - if someone tested negative, they will test again and again until the number is reached or is positive
 # - be careful: new notification cannot set the times to zero if someone is in a series of testing
 
-# Edit: 2025.06.12
+# Edit: 2025.06.17
 # Any edits that I make will include "#Taiye:".
 
 # Taiye (2025.05.27):
@@ -231,9 +231,10 @@ function runsim(simnum, ip::ModelParameters)
     ag7 = _collectdf(spl[7])
     insertcols!(all1, 1, :sim => simnum); insertcols!(ag1, 1, :sim => simnum); insertcols!(ag2, 1, :sim => simnum); 
     insertcols!(ag3, 1, :sim => simnum); insertcols!(ag4, 1, :sim => simnum); insertcols!(ag5, 1, :sim => simnum);
+    insertcols!(ag6, 1, :sim => simnum); insertcols!(ag7, 1, :sim => simnum); 
     
     # Taiye (2025.06.12): We are not considering workplaces.
-    #insertcols!(ag6, 1, :sim => simnum); insertcols!(ag7, 1, :sim => simnum); insertcols!(work, 1, :sim => simnum);
+    #insertcols!(work, 1, :sim => simnum);
     
 
     pos = findall(y-> y in (11,22,33),hmatrix[:,end])
