@@ -14,7 +14,7 @@
 using Distributed
 using Base.Filesystem
 using DataFrames
-using CSV,Statistics,Query,SlurmClusterManager
+using CSV,Statistics,Query,ClusterManagers
 using Dates
 using DelimitedFiles
 #using SlurmClusterManager # Taiye (2025.05.23)
@@ -30,7 +30,7 @@ using DelimitedFiles
 
 # Taiye (2025.06.01): Return addprocs when connecting to the cluster
 # Taiye (Use half cluster for testing): addprocs(ClusterManagers.SlurmManager(500), N=16, topology=:master_worker, exeflags = "--project=.")
-#addprocs(SlurmManager(250), N=8, topology=:master_worker, exeflags = "--project=.")
+addprocs(ClusterManagers.SlurmManager(250), N=8, topology=:master_worker, exeflags = "--project=.")
 @everywhere using Parameters, Distributions, StatsBase, StaticArrays, Random, Match, DataFrames
 @everywhere include("covid19abm.jl")
 @everywhere const cv=covid19abm
@@ -115,8 +115,8 @@ function create_folder(ip::cv.ModelParameters,province="ontario")
     
     #RF = string("heatmap/results_prob_","$(replace(string(ip.β), "." => "_"))","_vac_","$(replace(string(ip.vaccine_ef), "." => "_"))","_herd_immu_","$(ip.herd)","_$strategy","cov_$(replace(string(ip.cov_val)))") ## 
     #Taiye (2025.05.30): main_folder = "/data/thomas-covid/testing_canada"
-    #main_folder = "/data/Taiye"
-    main_folder = "."
+    main_folder = "/data/Taiye"
+    #main_folder = "."
     
     # Taiye (2025.05.27): secondaryfolder = string(main_folder,"/fmild_$(ip.fmild)_fwork_$(ip.fwork)") ##  
     #secondaryfolder = string(main_folder,"/fmild_$(ip.fmild)") # fwork is not found in covid19abm.jl
@@ -139,7 +139,7 @@ end
 # time testing
 # Taiye (2025.05.27):
 # function run_param_scen_cal(b::Float64,province::String="ontario",h_i::Int64 = 0,ic1::Int64=1,strains::Int64 = 1,index::Int64 = 0,scen::Int64 = 0,tra::Int64 = 0,eb::Int64 = 0,wpt::Int64 = 100,mt::Int64=300,test_time::Int64 = 1,test_dur::Int64=112,mildcomp::Float64 = 1.0,workcomp::Float64 = 1.0,dayst::Vector{Int64} = [1;4],trans_omicron::Float64 = 1.0,immu_omicron::Float64 = 0.0,rc=[1.0],dc=[1],nsims::Int64=500)
-function run_param_scen_cal(b::Float64,province::String="ontario",ic1::Int64=1,index::Int64 = 0,scen::Int64 = 0,test_time::Int64=0,test_dur::Int64=0,mt::Int64=300,nsims::Int64=500,ps::Int64=100000)
+function run_param_scen_cal(b::Float64,province::String="ontario",ic1::Int64=1,index::Int64 = 0,test_time::Int64=0,test_dur::Int64=0,mt::Int64=300,nsims::Int64=500,ps::Int64=100000)
       
     @everywhere ip = cv.ModelParameters(β=$b,
     # Taiye (2025.05.27):
