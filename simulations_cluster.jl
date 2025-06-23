@@ -29,7 +29,7 @@ using ClusterManagers
 using Dates
 using DelimitedFiles
 ENV["JULIA_WORKER_TIMEOUT"] = "180"
-addprocs(ClusterManagers.SlurmManager(250), N=8, topology=:master_worker, exeflags="--project=Project.toml"; W="300")
+# Taiye (2025.06.21 (Add for testing)): addprocs(ClusterManagers.SlurmManager(250), N=8, topology=:master_worker, exeflags="--project=Project.toml"; W="300")
 
 ## load the packages by covid19abm
 
@@ -82,6 +82,7 @@ function run(myp::cv.ModelParameters, nsims=1000, folderprefix="./")
     # mydfs = Dict("all" => allag, "ag1" => ag1, "ag2" => ag2, "ag3" => ag3, "ag4" => ag4, "ag5" => ag5, "ag6" => ag6,"ag7" => ag7, "working"=>working)
     mydfs = Dict("all" => allag, "ag1" => ag1, "ag2" => ag2, "ag3" => ag3, "ag4" => ag4, "ag5" => ag5, "ag6" => ag6,"ag7" => ag7)
 
+    #println(mydfs["all"]) # Taiye (2025.06.21): Testing
     #mydfs = Dict("all" => allag, "working"=>working, "kids"=>kids)
     #mydfs = Dict("all" => allag)
     
@@ -135,8 +136,9 @@ function create_folder(ip::cv.ModelParameters,province="ontario")
     #secondaryfolder = string(main_folder,"/fmild_$(ip.fmild)") # fwork is not found in covid19abm.jl
     
     # Taiye (2025.05.27): RF = string(secondaryfolder,"/results_prob_","$(replace(string(ip.β), "." => "_"))","_herd_immu_","$(ip.herd)","_idx_$(ip.file_index)_$(province)_strain_$(ip.strain)_scen_$(ip.scenariotest)_test_$(ip.test_ra)_eb_$(ip.extra_booster)_size_$(ip.size_threshold)") ## 
-    RF = string(main_folder,"/results_prob_","$(replace(string(ip.β), "." => "_"))","_idx_$(ip.file_index)_$(province)") 
-    
+    # Taiye (2025.06.23): RF = string(main_folder,"/results_prob_","$(replace(string(ip.β), "." => "_"))","_idx_$(ip.file_index)_$(province)") 
+    RF = string(main_folder,"/results_prob_","$(replace(string(ip.β), "." => "_"))","_idx_$(ip.file_index)_$(province)","_cov_$(ip.app_coverage)") 
+
     if !Base.Filesystem.isdir(main_folder)
         Base.Filesystem.mkpath(main_folder)
     end
@@ -152,7 +154,7 @@ end
 # time testing
 # Taiye (2025.05.27):
 # function run_param_scen_cal(b::Float64,province::String="ontario",h_i::Int64 = 0,ic1::Int64=1,strains::Int64 = 1,index::Int64 = 0,scen::Int64 = 0,tra::Int64 = 0,eb::Int64 = 0,wpt::Int64 = 100,mt::Int64=300,test_time::Int64 = 1,test_dur::Int64=112,mildcomp::Float64 = 1.0,workcomp::Float64 = 1.0,dayst::Vector{Int64} = [1;4],trans_omicron::Float64 = 1.0,immu_omicron::Float64 = 0.0,rc=[1.0],dc=[1],nsims::Int64=500)
-function run_param_scen_cal(b::Float64,province::String="ontario",ic1::Int64=1,index::Int64 = 0,test_time::Int64=0,test_dur::Int64=0,mt::Int64=300,nsims::Int64=500,ps::Int64=100000)
+function run_param_scen_cal(b::Float64,province::String="ontario",ic1::Int64=1,index::Int64 = 0,test_time::Int64=0,test_dur::Int64=0,mt::Int64=300,nsims::Int64=500,ps::Int64=100000, app_cov = 0.3)
       
     @everywhere ip = cv.ModelParameters(β=$b,
     # Taiye (2025.05.27):
@@ -165,7 +167,8 @@ function run_param_scen_cal(b::Float64,province::String="ontario",ic1::Int64=1,i
     #scenariotest = $scen,
     start_testing = $test_time,
     test_for = $test_dur,
-    popsize = $ps
+    popsize = $ps,
+    app_coverage = $app_cov
     )
 
     folder = create_folder(ip,province)
