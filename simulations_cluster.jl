@@ -154,7 +154,7 @@ end
 # time testing
 # Taiye (2025.05.27):
 # function run_param_scen_cal(b::Float64,province::String="ontario",h_i::Int64 = 0,ic1::Int64=1,strains::Int64 = 1,index::Int64 = 0,scen::Int64 = 0,tra::Int64 = 0,eb::Int64 = 0,wpt::Int64 = 100,mt::Int64=300,test_time::Int64 = 1,test_dur::Int64=112,mildcomp::Float64 = 1.0,workcomp::Float64 = 1.0,dayst::Vector{Int64} = [1;4],trans_omicron::Float64 = 1.0,immu_omicron::Float64 = 0.0,rc=[1.0],dc=[1],nsims::Int64=500)
-function run_param_scen_cal(b::Float64,province::String="ontario",ic1::Int64=1,index::Int64 = 0,test_time::Int64=0,test_dur::Int64=0,mt::Int64=300,nsims::Int64=500,ps::Int64=100000, app_cov = 0.3)
+function run_param_scen_cal(b::Float64,province::String="ontario",ic1::Int64=1,index::Int64 = 0,test_time::Int64=0,test_dur::Int64=0,mt::Int64=300,nsims::Int64=500,ps::Int64=100000, app_cov::Float64=0.3)
       
     @everywhere ip = cv.ModelParameters(β=$b,
     # Taiye (2025.05.27):
