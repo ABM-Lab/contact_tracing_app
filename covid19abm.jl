@@ -313,7 +313,7 @@ function main(ip::ModelParameters,sim::Int64)
         
         for x in humans
     #        if x.iso && !(x.health_status in (HOS,ICU,DED)) # Taiye: Depends on whether we are considering HOS, ICU and DED.
-            if x.iso && !(x.health_status in (DED)) #&& !(x.health_status in (HOS,ICU,DED))
+            if x.iso && !(x.health_status == DED) #&& !(x.health_status in (HOS,ICU,DED))
                 x.totaldaysiso += 1
 
             end
@@ -343,7 +343,7 @@ function main(ip::ModelParameters,sim::Int64)
         
         for x in humans
             # if x.iso && !(x.health_status in (HOS,ICU,DED)) # Taiye: Depends on whether we are considering HOS, ICU and DED.
-            if x.iso && !(x.health_status in (DED))
+            if x.iso && !(x.health_status == DED)
                 x.totaldaysiso += 1
             end
         end
@@ -365,7 +365,7 @@ function main(ip::ModelParameters,sim::Int64)
         initial_dw = st+(p.initial_day_week-1)-7*Int(floor((st-1+(p.initial_day_week-1))/7))
         for x in humans
             # if x.iso && !(x.health_status in (HOS,ICU,DED)) # Taiye: Depends on whether we are considering HOS, ICU and DED.
-            if x.iso && !(x.health_status in (DED)) #&& !(x.health_status in (HOS,ICU,DED))
+            if x.iso && !(x.health_status == DED) #&& !(x.health_status in (HOS,ICU,DED))
                 x.totaldaysiso += 1
                 
             end
@@ -760,7 +760,7 @@ function time_update()
         #if the individual recovers, we need to set they free. This loop must be here
 
         # if x.iso && x.daysisolation >= p.isolation_days && !(x.health_status in (HOS,ICU,DED))
-        if x.iso && x.daysisolation >= p.isolation_days && !(x.health_status in (DED)) 
+        if x.iso && x.daysisolation >= p.isolation_days && !(x.health_status == DED) 
             _set_isolation(x,false,:null)
             
             x.n_tests_perf = 0 # Taiye
@@ -928,12 +928,12 @@ end
 
 function send_notification(x::Human) # Taiye (2025.05.22): added an 's' to 'human'; Update: 'humans' -> 'Human'
     v = vcat(x.contacts...)
-    
     for i in v
         # Taiye (2025.05.23): Changed humans[i] to v[i] in each case.
-        if humans[i].notified == false # Taiye: To avoid new notifications resetting times.
-            humans[i].notified = true
-            humans[i].timetotest = p.time_until_testing
+        # Taiye (2025.06.24): changed i indexes to i+1 to eliminate 0 error
+        if humans[i+1].notified == false # Taiye: To avoid new notifications resetting times.
+            humans[i+1].notified = true
+            humans[i+1].timetotest = p.time_until_testing
         end
         #humans[i].time_since_testing = 0#p.time_between_tests # Taiye
     end
