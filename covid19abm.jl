@@ -917,7 +917,8 @@ function testing_infection(x::Human, teste)
         x.testedpos = true
         _set_isolation(x, true, :test)
 
-        send_notifications(x)
+        # Taiye (2025.06.24): send_notifications(x)
+        send_notification(x)
 
     else # Taiye: counting the number of negative tests performed.
           x.n_neg_tests += 1
