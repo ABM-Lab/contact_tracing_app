@@ -5,7 +5,7 @@ module covid19abm
 # - if someone tested negative, they will test again and again until the number is reached or is positive
 # - be careful: new notification cannot set the times to zero if someone is in a series of testing
 
-# Edit: 2025.06.17
+# Edit: 2025.06.24
 # Any edits that I make will include "#Taiye:".
 
 # Taiye (2025.05.27):
@@ -161,7 +161,7 @@ end
     isolation_days::Int64 = 5
     ageintapp::Vector{Int64} = [10; 60]
     ##for testing
-    
+
     test_ra::Int64 = 1 # Taiye (2025.06.24): 1 - PCR, 2 - Abbott_PanBio 3 - 	BD VERITO	4 - SOFIA
     # Taiye: I believe that PCR tests are the only ones being considered.
 
@@ -181,6 +181,9 @@ end
 
     # Taiye (2025.06.12): Defining initial_day_week.
     initial_day_week::Int64 = 1
+
+    # Taiye (2025.06.24): asymp_red was not defined in matrices_code.jl.
+    asymp_red::Float64 = 2 # Taiye (2025.06.24): tentative value
 end
 
 
