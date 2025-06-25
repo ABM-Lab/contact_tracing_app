@@ -29,7 +29,7 @@ using ClusterManagers
 using Dates
 using DelimitedFiles
 ENV["JULIA_WORKER_TIMEOUT"] = "180"
-# Taiye (2025.06.21 (Add for testing)): addprocs(ClusterManagers.SlurmManager(250), N=8, topology=:master_worker, exeflags="--project=Project.toml"; W="300")
+addprocs(ClusterManagers.SlurmManager(250), N=8, topology=:master_worker, exeflags="--project=Project.toml"; W="300")
 
 ## load the packages by covid19abm
 
