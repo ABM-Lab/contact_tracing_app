@@ -133,8 +133,8 @@ end
     fmild::Float64 = 0.5  ## percent of people practice self-isolation
     # Taiye: Could be useful later for keeping track of the population in isolation.
 
-    start_testing::Int64 = 0
-    test_for::Int64 = 0
+    start_testing::Int64 = 2 # Taiye (2025.06.30): 0 -> 2
+    test_for::Int64 = 2 # Taiye (2025.06.30): 0 -> 2
     fsevere::Float64 = 1.0 #
     frelasymp::Float64 = 0.26 ## relative transmission of asymptomatic
     fctcapture::Float16 = 0.0 ## how many symptomatic people identified
@@ -145,7 +145,7 @@ end
 
     file_index::Int16 = 0
     
-    app_coverage = 0.0
+    app_coverage = 0.8
     track_days::Int8 = 3
     #the cap for coverage should be 90% for 65+; 95% for HCW; 80% for 50-64; 60% for 16-49; and then 50% for 12-15 (starting from June 1).
     #comor_comp::Float64 = 0.7 #prop comorbidade tomam
@@ -315,7 +315,6 @@ function main(ip::ModelParameters,sim::Int64)
     #        if x.iso && !(x.health_status in (HOS,ICU,DED)) # Taiye: Depends on whether we are considering HOS, ICU and DED.
             if x.iso && !(x.health_status == DED) #&& !(x.health_status in (HOS,ICU,DED))
                 x.totaldaysiso += 1
-
             end
         end
         _get_model_state(st, hmatrix) ## this datacollection needs to be at the start of the for loop
@@ -849,12 +848,10 @@ function move_to_latent(x::Human)
         x.swap = PRE
         x.swap_status = PRE
         x.wentto = 1
-        
     else
         x.swap = ASYMP
         x.swap_status = ASYMP
         x.wentto = 2
-        
     end
     
     x.got_inf = true
@@ -1197,13 +1194,11 @@ function dyntrans(sys_time, grps,sim)
     for x in humans[pos]        
     # Taiye:     if x.health_status in (PRE, ASYMP, MILD, MISO, INF, IISO)
        # if x.health_status in (PRE, ASYMP, INF)
-            
             xhealth = x.health
             cnts = x.nextday_meetcnt
             cnts == 0 && continue # skip person if no contacts
             #general population contact
             gpw = Int.(round.(cm[x.ag]*cnts))
-            
             #cnts = number of contacts on that day
 
             
