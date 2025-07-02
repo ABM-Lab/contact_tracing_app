@@ -11,8 +11,14 @@
 
 a_c = 0.05 # Taiye (2025.06.23): app_coverage
 cv.ModelParameters(popsize=10)
-for i = 0:20
+
+# Taiye (2025.07.01): Uncomment after rectifying coverage.
+#for i = 0:20
     # run_param_scen_cal(0.1,"ontario",1,0,10,50,200,2,1000,a_c*i)
-    run_param_scen_cal(1.0,"ontario",1,0,10,50,200,500,1000,a_c*i)
-end
+ #   run_param_scen_cal(1.0,"ontario",1,0,1,200,200,500,1000,a_c*i)
+#end
+
+run_param_scen_cal(1.0,"ontario",1,0,1,200,200,500,1000,0.0)
+run_param_scen_cal(1.0,"ontario",1,0,1,200,200,500,1000,0.8)
+
 # run_param_scen_cal(0.1,"ontario",1,0,10,50,200,2,1000)
