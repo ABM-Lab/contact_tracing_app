@@ -137,7 +137,10 @@ function create_folder(ip::cv.ModelParameters,province="ontario")
     
     # Taiye (2025.05.27): RF = string(secondaryfolder,"/results_prob_","$(replace(string(ip.β), "." => "_"))","_herd_immu_","$(ip.herd)","_idx_$(ip.file_index)_$(province)_strain_$(ip.strain)_scen_$(ip.scenariotest)_test_$(ip.test_ra)_eb_$(ip.extra_booster)_size_$(ip.size_threshold)") ## 
     # Taiye (2025.06.23): RF = string(main_folder,"/results_prob_","$(replace(string(ip.β), "." => "_"))","_idx_$(ip.file_index)_$(province)") 
-    RF = string(main_folder,"/results_prob_","$(replace(string(ip.β), "." => "_"))","_idx_$(ip.file_index)_$(province)","_cov_$(ip.app_coverage)") 
+    
+    # Taiye (2025.07.01): Adding date to folder.
+    # RF = string(main_folder,"/results_prob_","$(replace(string(ip.β), "." => "_"))","_idx_$(ip.file_index)_$(province)","_cov_$(ip.app_coverage)") 
+    RF = string(main_folder,"/07_01_results_prob_","$(replace(string(ip.β), "." => "_"))","_idx_$(ip.file_index)_$(province)","_cov_$(round(ip.app_coverage,digits=2))") 
 
     if !Base.Filesystem.isdir(main_folder)
         Base.Filesystem.mkpath(main_folder)
