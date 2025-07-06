@@ -744,7 +744,7 @@ function time_update()
                 :ASYMP => begin move_to_asymp(x);  end
               # Taiye:  :MILD => begin nra+=move_to_mild(x); end
               
-                :INF  => begin move_to_inf(x); end    
+                :INF  => begin move_to_inf(x); end # Taiye (2025.07.04)
               
               # Taiye:   :HOS  => begin move_to_hospicu(x); end 
               # Taiye:   :ICU  => begin move_to_hospicu(x); end
@@ -752,8 +752,14 @@ function time_update()
                 :DED  => begin move_to_dead(x); end
                 _    => begin dump(x); error("swap expired, but no swap set."); end
             end
+            
         end
         #if the individual recovers, we need to set they free. This loop must be here
+
+        # Taiye (2025.07.05):
+        if x.health_status == INF
+            nra = nra + Int(move_to_inf(x))
+        end
 
         # if x.iso && x.daysisolation >= p.isolation_days && !(x.health_status in (HOS,ICU,DED))
         if x.iso && x.daysisolation >= p.isolation_days && !(x.health_status == DED) 
@@ -1021,6 +1027,7 @@ function move_to_inf(x::Human)
    # end
     ## before returning, check if swap is set 
     #x.swap == UNDEF && error("agent I -> ?")
+
 end
 
 # Taiye: This function might be unnecessary.
@@ -1340,3 +1347,24 @@ end
 ## references: 
 # critical care capacity in Canada https://www.ncbi.nlm.nih.gov/pubmed/25888116
 end
+
+# Taiye (2025.07.05):
+#no_iso = zeros(Int64,length(humans))
+#for x in humans
+ #   x.iso = false
+#end
+#for i = 1:length(humans)
+ #   no_iso[i] = get_nextday_counts(humans[i])
+#end
+#histogram(no_iso,nbins=50,label = "No isolation (cnt)")
+#savefig("no_iso.png")
+
+#yes_iso = zeros(Int64,length(humans))
+#for y in humans
+ #   y.iso = true
+#end
+#for i = 1:length(humans)
+ #   yes_iso[i] = get_nextday_counts(humans[i])
+#end
+#histogram(yes_iso,nbins = 50, label = "Isolation Enforced (cnt)")
+#savefig("iso_enf.png")
