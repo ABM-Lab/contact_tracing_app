@@ -721,14 +721,8 @@ function time_update()
                 :DED  => begin move_to_dead(x); end
                 _    => begin dump(x); error("swap expired, but no swap set."); end
             end
-            
         end
         #if the individual recovers, we need to set they free. This loop must be here
-
-        # Taiye (2025.07.05):
-        if x.health_status == INF
-            nra = nra + Int(move_to_inf(x))
-        end
 
         # if x.iso && x.daysisolation >= p.isolation_days && !(x.health_status in (HOS,ICU,DED))
         if x.iso && x.daysisolation >= p.isolation_days && !(x.health_status == DED) 
@@ -985,7 +979,6 @@ function move_to_inf(x::Human)
    # end
     ## before returning, check if swap is set 
     #x.swap == UNDEF && error("agent I -> ?")
-
 end
 
 
