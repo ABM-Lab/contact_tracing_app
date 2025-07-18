@@ -5,7 +5,7 @@ module covid19abm
 # - if someone tested negative, they will test again and again until the number is reached or is positive
 # - be careful: new notification cannot set the times to zero if someone is in a series of testing
 
-# Edit: 2025.07.01
+# Edit: 2025.07.18
 # Any edits that I make will include "#Taiye:".
 
 
