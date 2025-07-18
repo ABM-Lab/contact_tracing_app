@@ -219,7 +219,7 @@ function runsim(simnum, ip::ModelParameters)
     #insertcols!(work, 1, :sim => simnum);
     
 
-    pos = findall(y-> y in (11,22,33),hmatrix[:,end])
+    pos = findall(y-> y == 7, hmatrix[:,end])
 
     vector_ded::Vector{Int64} = zeros(Int64,100)
 
@@ -1099,7 +1099,7 @@ function dyntrans(sys_time, grps,sim)
 
             
             perform_contacts(x,gpw,grps,xhealth)
-                      
+            
         
     end
     #return totalmet, totalinf
@@ -1174,6 +1174,8 @@ function perform_contacts(x,gpw,grp_sample,xhealth)
         
         end
     end  
+
+    x.nextday_meetcnt = 0
 
 end
 function contact_matrix()
