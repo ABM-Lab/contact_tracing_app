@@ -5,7 +5,7 @@ module covid19abm
 # - if someone tested negative, they will test again and again until the number is reached or is positive
 # - be careful: new notification cannot set the times to zero if someone is in a series of testing
 
-# Edit: 2025.07.18
+# Edit: 2025.07.20
 # Any edits that I make will include "#Taiye:".
 
 
@@ -149,7 +149,7 @@ end
     # Taiye: I believe that PCR tests are the only ones being considered.
 
     time_until_testing::Int64 = 1
-    n_tests::Int64 = 2
+    n_tests::Int64 = 2 # Taiye (2025.07.20): Restore to 2
     time_between_tests::Int64 = 0
 
     #n_neg_tests::Int64 = 0 # Taiye
@@ -163,6 +163,9 @@ end
 
     # Taiye (2025.06.24): asymp_red was not defined in matrices_code.jl.
     asymp_red::Float64 = 0.5 # Taiye (2025.06.24): tentative value
+
+    # Taiye (2025.07.20): Notification parameter
+    not_swit::Bool = false
 end
 
 
@@ -881,7 +884,7 @@ function testing_infection(x::Human, teste)
         _set_isolation(x, true, :test)
 
         # Taiye (2025.06.24): send_notifications(x)
-        send_notification(x)
+        send_notification(x,p.not_swit)
 
     else # Taiye: counting the number of negative tests performed.
           x.n_neg_tests += 1
@@ -890,14 +893,16 @@ function testing_infection(x::Human, teste)
 
 end
 
-function send_notification(x::Human) # Taiye (2025.05.22): added an 's' to 'human'; Update: 'humans' -> 'Human'
-    v = vcat(x.contacts...)
-    for i in v
-        if 1 <= i <= length(humans) && !humans[i].notified # Taiye: To avoid new notifications resetting times.
-            humans[i].notified = true
-            humans[i].timetotest = p.time_until_testing
+function send_notification(x::Human,switch) # Taiye (2025.05.22): added an 's' to 'human'; Update: 'humans' -> 'Human'
+    if switch == true
+        v = vcat(x.contacts...)
+        for i in v
+            if 1 <= i <= length(humans) && !humans[i].notified # Taiye: To avoid new notifications resetting times.
+                humans[i].notified = true
+                humans[i].timetotest = p.time_until_testing
+            end
+            #humans[i].time_since_testing = 0#p.time_between_tests # Taiye
         end
-        #humans[i].time_since_testing = 0#p.time_between_tests # Taiye
     end
 
 end
@@ -956,7 +961,7 @@ function move_to_inf(x::Human)
     x.tis = 0 
     
     #? Thomas:
-    if p.testing && !x.testedpos && x.has_app
+    if p.testing && !x.testedpos && x.has_app && p.not_swit == true # Taiye (2025.07.20): added not_swit
         #testing_infection(x, p.test_ra)
         x.notified = true
 
