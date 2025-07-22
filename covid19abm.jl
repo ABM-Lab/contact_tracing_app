@@ -149,7 +149,7 @@ end
     # Taiye: I believe that PCR tests are the only ones being considered.
 
     time_until_testing::Int64 = 1
-    n_tests::Int64 = 2 # Taiye (2025.07.20): Restore to 2
+    n_tests::Int64 = 1 # Taiye (2025.07.20): Restore to 2
     time_between_tests::Int64 = 0
 
     #n_neg_tests::Int64 = 0 # Taiye
@@ -854,8 +854,8 @@ function move_to_pre(x::Human)
      #   error("no strain in move to pre")
     #end  # percentage of sick individuals going to mild infection stage
 
-    # Taiye (2025.06.12):
-    θ = (0.95, 0.9, 0.85, 0.6, 0.2)
+    # Taiye (2025.07.22):
+    #θ = (0.95, 0.9, 0.85, 0.6, 0.2)
     
     x.health = x.swap
     x.health_status = x.swap_status
@@ -863,16 +863,8 @@ function move_to_pre(x::Human)
     x.exp = x.dur[3] # get the presymptomatic period
     ##########
 
-    
-    if rand() < (1-θ[x.ag])
-        x.swap = INF
-        x.swap_status = INF
-    
-    # Taiye: This loop might be unnecessary.
-    #else 
-     #   x.swap = MILD
-      #  x.swap_status = MILD
-    end
+    x.swap = INF
+    x.swap_status = INF
     
 end
 export move_to_pre
@@ -894,7 +886,7 @@ function testing_infection(x::Human, teste)
 end
 
 function send_notification(x::Human,switch) # Taiye (2025.05.22): added an 's' to 'human'; Update: 'humans' -> 'Human'
-    if switch == true
+    if switch
         v = vcat(x.contacts...)
         for i in v
             if 1 <= i <= length(humans) && !humans[i].notified # Taiye: To avoid new notifications resetting times.
@@ -961,7 +953,7 @@ function move_to_inf(x::Human)
     x.tis = 0 
     
     #? Thomas:
-    if p.testing && !x.testedpos && x.has_app && p.not_swit == true # Taiye (2025.07.20): added not_swit
+    if p.testing && !x.testedpos && x.has_app
         #testing_infection(x, p.test_ra)
         x.notified = true
 
@@ -1057,7 +1049,7 @@ export _get_betavalue
     
     elseif !(x.health_status == (DED)) # Taiye
         #todo TESTING: set cnt below to 0
-        cnt = rand(negative_binomials_shelter(ag,p.contact_change_2))  # expensive operation, try to optimize
+        cnt = 0 # Taiye (2025.07.22) (Restore later) rand(negative_binomials_shelter(ag,p.contact_change_2))  # expensive operation, try to optimize
       
     # Taiye (2025.06.09): nextday_meetcnt_w is only used here and could refer to workplaces, which would make it unnecessary.
       #  x.nextday_meetcnt_w = 0
@@ -1122,10 +1114,11 @@ function perform_contacts(x,gpw,grp_sample,xhealth)
 
         
             ycnt = y.nextday_meetcnt  
-            
+            ycnt == 0 && continue
+
             y.nextday_meetcnt = y.nextday_meetcnt - min(1,ycnt) # remove a contact
 
-            ycnt == 0 && continue
+            # ycnt == 0 && continue (Taiye 2025.07.22; changed in meeting)
             
             if y.has_app && x.has_app
                 x.ncontacts_day = x.ncontacts_day+1
