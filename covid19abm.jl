@@ -165,7 +165,7 @@ end
     asymp_red::Float64 = 0.5 # Taiye (2025.06.24): tentative value
 
     # Taiye (2025.07.20): Notification parameter
-    not_swit::Bool = false
+    not_swit::Bool = true
 end
 
 
@@ -1049,8 +1049,9 @@ export _get_betavalue
     
     elseif !(x.health_status == (DED)) # Taiye
         #todo TESTING: set cnt below to 0
-        cnt = 0 # Taiye (2025.07.22) (Restore later) rand(negative_binomials_shelter(ag,p.contact_change_2))  # expensive operation, try to optimize
+       # cnt = 0 # Taiye (2025.07.22) (Restore later) rand(negative_binomials_shelter(ag,p.contact_change_2))  # expensive operation, try to optimize
       
+        cnt = rand(negative_binomials_shelter(ag,p.contact_change_2))
     # Taiye (2025.06.09): nextday_meetcnt_w is only used here and could refer to workplaces, which would make it unnecessary.
       #  x.nextday_meetcnt_w = 0
       
@@ -1114,29 +1115,51 @@ function perform_contacts(x,gpw,grp_sample,xhealth)
 
         
             ycnt = y.nextday_meetcnt  
-            ycnt == 0 && continue
+            ycnt == 0 && continue 
+
+            xcnt = x.nextday_meetcnt
+            xcnt == 0 && continue 
 
             y.nextday_meetcnt = y.nextday_meetcnt - min(1,ycnt) # remove a contact
+            x.nextday_meetcnt = x.nextday_meetcnt - min(1,xcnt)
 
             # ycnt == 0 && continue (Taiye 2025.07.22; changed in meeting)
             
-            if y.has_app && x.has_app
-                x.ncontacts_day = x.ncontacts_day+1
-                # Taiye (2025.06.27): Attempting to correct BoundsError: attempt to access 1-element Vector{Int16} at index [2]
-                if length(x.contacts[1]) >= x.ncontacts_day
-                    #x.contacts[1] = y.idx
-                #else
-                    x.contacts[1][x.ncontacts_day] = y.idx
-                end
+             if y.has_app && x.has_app
 
-             # Taiye (2025.06.27): Attempting to correct BoundsError: attempt to access 1-element Vector{Int16} at index [2]
+                # Taiye (2025.07.23)
+              #  x_con_vec = repeat([0],x.ncontacts_day+1)
+               # y_con_vec = repeat([0],y.ncontacts_day+1)
+                #for i = 1:length(x.contacts[1])
+                 #   x_con_vec[i] = x.contacts[1][i]
+               # end
+                #x.contacts[1] = x_con_vec
+               # for i = 1:length(y.contacts[1])
+                #    y_con_vec[i] = y.contacts[1][i]
+               # end
+                #y.contacts[1] = y_con_vec
+
+                x.ncontacts_day = x.ncontacts_day+1
+                x.contacts[1][x.ncontacts_day] = y.idx
                 y.ncontacts_day = y.ncontacts_day+1
-                if length(y.contacts[1]) >= y.ncontacts_day
-                    #y.contacts[1] = x.idx
-                #else    
-                    y.contacts[1][y.ncontacts_day] = x.idx
-                end
-            end
+                y.contacts[1][y.ncontacts_day] = x.idx
+             end
+
+
+# Taiye (2025.07.23): Testing boundserror
+            #if y.has_app && x.has_app
+               # x.ncontacts_day = x.ncontacts_day+1
+                # Taiye (2025.06.27): Attempting to correct BoundsError: attempt to access 1-element Vector{Int16} at index [2]
+              #  if length(x.contacts[1]) >= x.ncontacts_day
+             #       x.contacts[1][x.ncontacts_day] = y.idx
+            #    end
+             # Taiye (2025.06.27): Attempting to correct BoundsError: attempt to access 1-element Vector{Int16} at index [2]
+            #    y.ncontacts_day = y.ncontacts_day+1
+             #   if length(y.contacts[1]) >= y.ncontacts_day
+              #      y.contacts[1][y.ncontacts_day] = x.idx
+               # end
+            #end
+            
             #adj_beta = 0 # adjusted beta value by strain and vaccine efficacy
             if x.health_status in (PRE, ASYMP, INF) && y.health == SUS && y.swap == UNDEF 
                 
