@@ -369,10 +369,13 @@ export main
 #end
 
 
-function dist_app(humans, p)
+function dist_app(humans, p, sim)
     # Taiye (2025.06.12): pos = findall(x.age in p.ageintapp[1]:p.ageintapp[2], humans)
+    rng = MersenneTwister(2421*sim)
+
     pos = findall(x->x.age in p.ageintapp[1]:p.ageintapp[2], humans)
-    pos = sample(pos, Int(round(p.app_coverage*length(pos))), replace = false)
+    pos = shuffle(rng, pos)
+    pos = pos[1:Int(round(p.app_coverage*length(pos)))]
 
     for i in pos
         humans[i].has_app = true
