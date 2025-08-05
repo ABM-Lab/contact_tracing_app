@@ -142,7 +142,7 @@ function create_folder(ip::cv.ModelParameters,province="ontario")
     
     # Taiye (2025.07.01): Adding date to folder.
     # RF = string(main_folder,"/results_prob_","$(replace(string(ip.β), "." => "_"))","_idx_$(ip.file_index)_$(province)","_cov_$(ip.app_coverage)") 
-    RF = string(main_folder,"/07_08_results_prob_","$(replace(string(ip.β), "." => "_"))","_idx_$(ip.file_index)_$(province)","_cov_$(round(ip.app_coverage,digits=2))") 
+    RF = string(main_folder,"/notif_$(ip.not_swit)","_07_30_cnt_$(ip.iso_con)","_sens_$(ip.test_sens)","_n_tests_$(ip.n_tests)","_results_prob_","$(replace(string(round(ip.β,digits=2)), "." => "_"))","_idx_$(ip.file_index)_$(province)","_cov_$(round(ip.app_coverage,digits=2))") 
 
     if !Base.Filesystem.isdir(main_folder)
         Base.Filesystem.mkpath(main_folder)
@@ -159,7 +159,7 @@ end
 # time testing
 # Taiye (2025.05.27):
 # function run_param_scen_cal(b::Float64,province::String="ontario",h_i::Int64 = 0,ic1::Int64=1,strains::Int64 = 1,index::Int64 = 0,scen::Int64 = 0,tra::Int64 = 0,eb::Int64 = 0,wpt::Int64 = 100,mt::Int64=300,test_time::Int64 = 1,test_dur::Int64=112,mildcomp::Float64 = 1.0,workcomp::Float64 = 1.0,dayst::Vector{Int64} = [1;4],trans_omicron::Float64 = 1.0,immu_omicron::Float64 = 0.0,rc=[1.0],dc=[1],nsims::Int64=500)
-function run_param_scen_cal(b::Float64,province::String="ontario",ic1::Int64=1,index::Int64 = 0,test_time::Int64=0,test_dur::Int64=0,mt::Int64=300,nsims::Int64=500,ps::Int64=100000, app_cov::Float64=0.3)
+function run_param_scen_cal(b::Float64,province::String="ontario",ic1::Int64=1,index::Int64 = 0,test_time::Int64=0,test_dur::Int64=0,mt::Int64=300,nsims::Int64=500,ps::Int64=100000, app_cov::Float64=0.3, test_cap::Int64=1, i_con::Int64=0,notif::Bool=true,t_sens=1)
       
     @everywhere ip = cv.ModelParameters(β=$b,
     # Taiye (2025.05.27):
@@ -173,7 +173,12 @@ function run_param_scen_cal(b::Float64,province::String="ontario",ic1::Int64=1,i
     start_testing = $test_time,
     test_for = $test_dur,
     popsize = $ps,
-    app_coverage = $app_cov
+    app_coverage = $app_cov,
+    num_sims = $nsims,
+    n_tests = $test_cap,
+    iso_con = $i_con,
+    not_swit = $notif,
+    test_sens = $t_sens
     )
 
     folder = create_folder(ip,province)
