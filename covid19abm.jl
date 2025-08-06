@@ -112,6 +112,9 @@ Base.@kwdef mutable struct Human
 
     n_neg_tests::Int64 = 0 # Taiye
 
+    # Taiye (2025.08.05):
+    quar::Int64 = 0
+
 end
 
 ## default system parameters
@@ -222,9 +225,15 @@ function runsim(simnum, ip::ModelParameters)
     ag5 = _collectdf(spl[5])
     ag6 = _collectdf(spl[6])
     ag7 = _collectdf(spl[7])
+
+    v_has = [x.has_app ? 1 : 2 for x in humans]
+    spl = _splitstate(hmatrix, v_has)
+    use_1 = _collectdf(spl[1])
+    use_2 = _collectdf(spl[2])
+
     insertcols!(all1, 1, :sim => simnum); insertcols!(ag1, 1, :sim => simnum); insertcols!(ag2, 1, :sim => simnum); 
     insertcols!(ag3, 1, :sim => simnum); insertcols!(ag4, 1, :sim => simnum); insertcols!(ag5, 1, :sim => simnum);
-    insertcols!(ag6, 1, :sim => simnum); insertcols!(ag7, 1, :sim => simnum); 
+    insertcols!(ag6, 1, :sim => simnum); insertcols!(ag7, 1, :sim => simnum); insertcols!(use_1, 1, :sim => simnum); insertcols!(use_2, 1, :sim => simnum);  
     
     # Taiye (2025.06.12): We are not considering workplaces.
     #insertcols!(work, 1, :sim => simnum);
@@ -246,10 +255,17 @@ function runsim(simnum, ip::ModelParameters)
     giso = map(y-> sum([ii.totaldaysiso for ii in humans[y]]),geniso_gr)
     #wiso = map(y-> sum([ii.totaldaysiso for ii in humans[y]]),workiso_gr)
 
-    # Taiye (2025.06.12):
+    # Taiye (2025.08.06):
+    bin_vec = [0,1]
+    quar_dis = map(y -> findall(x -> x.quar in y, humans),bin_vec)
+    quar_tot = map(y -> sum([x.quar for x in humans[y]]),quar_dis)
+
+
+    # Taiye (2025.08.06):
     # return (a=all1, g1=ag1, g2=ag2, g3=ag3, g4=ag4, g5=ag5,g6=ag6,g7=ag7, work = work,vector_dead=vector_ded,nra=nra,npcr=npcr, R0 = R01, niso_t_p=niso_t_p, nleft=nleft,giso = giso, wiso = wiso)
     return (a=all1, g1=ag1, g2=ag2, g3=ag3, g4=ag4, g5=ag5,g6=ag6,g7=ag7,
-    vector_dead=vector_ded,nra=nra,R0 = R01, giso = giso)
+    vector_dead=vector_ded,nra=nra,R0 = R01, giso = giso, u1 = use_1, u2 = use_2, 
+    quar_tot = quar_tot)
 end
 export runsim
 
@@ -448,6 +464,11 @@ function _splitstate(hmatrix, ags)
         idx = findall(x -> x == i, ags)
         push!(matx, view(hmatrix, idx, :))
     end
+
+    # Taiye (2025.08.05):
+    #quar_mat = []
+    #for i = 1:length(humans) #in (true, false)
+     #   idx = findall(x -> x)
     return matx
 end
 export _splitstate
@@ -781,6 +802,11 @@ export time_update
     elseif !iso
         x.iso = iso 
         x.isovia = via
+    end
+
+    # Taiye (2025.08.05):
+    if x.iso == true
+        x.quar = 1
     end
 
 end
