@@ -121,7 +121,7 @@ end
 @with_kw mutable struct ModelParameters @deftype Float64    ## use @with_kw from Parameters
     β = 0.0345       
     seasonal::Bool = false ## seasonal betas or not
-    popsize::Int64 = 100000
+    popsize::Int64 = 10000
     prov::Symbol = :ontario
     calibration::Bool = false
     calibration2::Bool = false 
@@ -141,7 +141,7 @@ end
 
     file_index::Int16 = 0
     
-    app_coverage = 0.8
+    app_coverage = 1.0
     track_days::Int8 = 3
     
     isolation_days::Int64 = 5
@@ -171,7 +171,7 @@ end
     asymp_red::Float64 = 0.5 # Taiye (2025.06.24): tentative value
 
     # Taiye (2025.07.20): Notification parameter
-    not_swit::Bool = true
+    not_swit::Bool = false
 
     # Taiye (2025.07.28): number of simulations, number of contacts in isolation
     num_sims::Int64 = 500
@@ -715,6 +715,8 @@ function time_update()
     
     if p.testing
         for x in humans
+            x.timetotest -= 1
+            x.time_since_testing += 1 # Taiye: We could measure this in days.
             if x.notified && !x.testedpos && x.n_tests_perf <= p.n_tests && x.timetotest <= 0 && x.time_since_testing >= p.time_between_tests # Taiye
                 testing_infection(x, p.test_ra)
                 
@@ -735,9 +737,7 @@ function time_update()
         x.daysinf += 1
         x.days_after_detection += 1 #we don't care about this untill the individual is detected
         x.daysisolation += 1
-        x.timetotest -= 1
 
-        x.time_since_testing += 1 # Taiye: We could measure this in days.
         
 
         if x.tis >= x.exp             
