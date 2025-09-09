@@ -77,7 +77,7 @@ Base.@kwdef mutable struct Human
     #### for testing
 
     daysisolation::Int64 = 999 
-
+    isolation_days::Int64 = 7
     # Taiye (2025.09.07): 
     symp_iso::Int64 = 999
 
@@ -153,8 +153,8 @@ end
     track_days::Int8 = 3
     
     # Taiye (2025.09.03): 5 -> 7
-    isolation_days::Int64 = 7 
-    symp_days::Int64 = 5
+    # isolation_days::Int64 = 7 
+    #symp_days::Int64 = 5
 
     # Taiye (2025.07.29)
     #ageintapp::Vector{Int64} = [10; 60]
@@ -189,7 +189,7 @@ end
     test_sens::Int64 = 1
 
     # Taiye (2025.09.03):
-    comp_prob::Float64 = 1.0
+    comp_prob::Bool = false
 
     # Taiye (2025.09.07):
     pre_test::Bool = false
@@ -734,14 +734,15 @@ function time_update()
             x.time_since_testing += 1 # Taiye: We could measure this in days.
 
             # Taiye (2025.09.03):
-            if p.comp_prob == 0.5 && rand() < p.comp_prob
+            #!Thomas: it would be better change it to boolean
+            if p.comp_prob && rand() < p.comp_prob
                 x.comp = false
 
             elseif x.symp_inf
                 x.comp = true
             end
 
-            if (x.notified || x.health_status == INF) && !x.testedpos && x.n_tests_perf <= p.n_tests && x.timetotest <= 0 && x.time_since_testing >= p.time_between_tests && x.comp # Taiye (2025.09.07)
+            if x.notified && !x.testedpos && x.n_tests_perf <= p.n_tests && x.timetotest <= 0 && x.time_since_testing >= p.time_between_tests && x.comp # Taiye (2025.09.07)
                 testing_infection(x, p.test_ra)
                 
                 x.time_since_testing = 0
@@ -751,11 +752,11 @@ function time_update()
                     x.n_tests_perf = 0
                 end
 
-            # Taiye (2025.09.07):
-            elseif !x.testedpos && x.n_neg_tests >= 1 && x.pre_test && x.symp_inf && x.n_tests_perf < p.n_tests
-                x.testedpos = true
-                _set_isolation(x, true, :test)
-                send_notification(x,p.not_swit)
+            # # Taiye (2025.09.07):
+            # elseif !x.testedpos && x.n_neg_tests >= 1 && x.pre_test && x.symp_inf && x.n_tests_perf < p.n_tests
+            #     x.testedpos = true
+            #     _set_isolation(x, true, :test)
+            #     send_notification(x,p.not_swit)
             end
         end
     end
@@ -795,7 +796,7 @@ function time_update()
         #if the individual recovers, we need to set they free. This loop must be here
 
         # if x.iso && x.daysisolation >= p.isolation_days && !(x.health_status in (HOS,ICU,DED))
-        if (x.iso && x.daysisolation >= p.isolation_days && !(x.health_status == DED) && !x.symp_inf) || (x.iso && x.symp_inf && x.symp_iso >= p.symp_days && !(x.health_status == DED)) # Taiye (2025.09.07)
+        if (x.iso && x.daysisolation >= x.isolation_days && !(x.health_status == DED)) # Taiye (2025.09.07)
       #  if x.iso && !(x.health_status == DED) && 
             _set_isolation(x,false,:null)
             
@@ -834,7 +835,7 @@ export time_update
         x.isovia = via
         x.daysisolation = 0
         x.days_after_detection = 0
-
+        x.isolation_days = via == :test ? 7 : 5
         # Taiye (2025.09.07):
         x.symp_iso = 0
     elseif !iso
@@ -949,7 +950,9 @@ function testing_infection(x::Human, teste)
     pp = _get_prob_test(x,teste,p.test_sens)
     if rand() < pp
         x.testedpos = true
-        _set_isolation(x, true, :test)
+        if !x.iso
+            _set_isolation(x, true, :test)
+        end
 
         # Taiye (2025.06.24): send_notifications(x)
         send_notification(x,p.not_swit)
@@ -1047,7 +1050,7 @@ function move_to_inf(x::Human)
         x.timetotest = 1
     end
 
-       
+    _set_isolation(x, true, :symp)
    # else ## no hospital for this lucky (but severe) individual 
     if rand() < mh_2[gg]
             x.exp = x.dur[4] 
