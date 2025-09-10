@@ -5,7 +5,7 @@ module covid19abm
 # - if someone tested negative, they will test again and again until the number is reached or is positive
 # - be careful: new notification cannot set the times to zero if someone is in a series of testing
 
-# Edit: 2025.09.07
+# Edit: 2025.09.10
 # Any edits that I make will include "#Taiye:".
 
 
@@ -78,8 +78,6 @@ Base.@kwdef mutable struct Human
 
     daysisolation::Int64 = 999 
     isolation_days::Int64 = 7
-    # Taiye (2025.09.07): 
-    symp_iso::Int64 = 999
 
     # days_after_detection::Int64 = 999
     # positive::Bool = false
@@ -188,11 +186,8 @@ end
     iso_con::Int64 = 0
     test_sens::Int64 = 1
 
-    # Taiye (2025.09.03):
-    comp_prob::Bool = false
-
-    # Taiye (2025.09.07):
-    pre_test::Bool = false
+    # Taiye (2025.09.10):
+    comp_bool::Bool = true
 end
 
 
@@ -735,11 +730,10 @@ function time_update()
 
             # Taiye (2025.09.03):
             #!Thomas: it would be better change it to boolean
-            if p.comp_prob && rand() < p.comp_prob
-                x.comp = false
 
-            elseif x.symp_inf
-                x.comp = true
+            # Taiye (2025.09.10): symptomatic individuals will always comply
+            if !p.comp_bool && rand() < round(0.5, digits = 1) && !x.symp_inf
+                x.comp = false
             end
 
             if x.notified && !x.testedpos && x.n_tests_perf <= p.n_tests && x.timetotest <= 0 && x.time_since_testing >= p.time_between_tests && x.comp # Taiye (2025.09.07)
@@ -768,11 +762,6 @@ function time_update()
         x.daysinf += 1
         x.days_after_detection += 1 #we don't care about this untill the individual is detected
         x.daysisolation += 1
-
-        if x.symp_inf
-            x.symp_iso += 1
-        end
-
         
 
         if x.tis >= x.exp             
@@ -796,7 +785,7 @@ function time_update()
         #if the individual recovers, we need to set they free. This loop must be here
 
         # if x.iso && x.daysisolation >= p.isolation_days && !(x.health_status in (HOS,ICU,DED))
-        if (x.iso && x.daysisolation >= x.isolation_days && !(x.health_status == DED)) # Taiye (2025.09.07)
+        if x.iso && x.daysisolation >= x.isolation_days && !(x.health_status == DED) # Taiye (2025.09.07)
       #  if x.iso && !(x.health_status == DED) && 
             _set_isolation(x,false,:null)
             
@@ -836,8 +825,7 @@ export time_update
         x.daysisolation = 0
         x.days_after_detection = 0
         x.isolation_days = via == :test ? 7 : 5
-        # Taiye (2025.09.07):
-        x.symp_iso = 0
+
     elseif !iso
         x.iso = iso 
         x.isovia = via
@@ -960,11 +948,6 @@ function testing_infection(x::Human, teste)
     else # Taiye: counting the number of negative tests performed.
           x.n_neg_tests += 1
     end
-
-    if x.health_status == PRE
-        x.pre_test = true
-    end
-
 end
 
 function send_notification(x::Human,switch) # Taiye (2025.05.22): added an 's' to 'human'; Update: 'humans' -> 'Human'
