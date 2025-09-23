@@ -5,7 +5,7 @@ module covid19abm
 # - if someone tested negative, they will test again and again until the number is reached or is positive
 # - be careful: new notification cannot set the times to zero if someone is in a series of testing
 
-# Edit: 2025.09.21
+# Edit: 2025.09.23
 # Any edits that I make will include "#Taiye:".
 
 
@@ -125,6 +125,9 @@ Base.@kwdef mutable struct Human
     # Taiye (2025.09.17):
     tstd::Bool = false # Has an individual tested at some point?
     not_asp::Bool = false # Has an individual been notified at some point?
+
+    # Taiye (2025.09.22):
+    reported = false
 end
 
 ## default system parameters
@@ -833,7 +836,7 @@ export time_update
     # a person could be isolated in mild/severe phase through fmild, fsevere
     # --> if x.iso == true from CT and x.isovia == :ct, do not overwrite
     # --> if x.iso == true from PRE and x.isovia == :pi, do not overwrite
-    if x.isovia == :null || via == :sev
+    if x.isovia == :null || via == :symp # Taiye (2025.09.23)
         x.iso = iso 
         x.isovia = via
         x.daysisolation = 0
@@ -977,6 +980,10 @@ function send_notification(x::Human,switch) # Taiye (2025.05.22): added an 's' t
             end
             #humans[i].time_since_testing = 0#p.time_between_tests # Taiye
         end
+
+        # Taiye (2025.09.22):
+        x.reported = true
+
     end
 
 end
