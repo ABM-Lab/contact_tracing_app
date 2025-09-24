@@ -732,6 +732,7 @@ function time_update()
     
     if p.testing
         for x in humans
+
             x.timetotest -= 1
             x.time_since_testing += 1 # Taiye: We could measure this in days.
 
@@ -740,8 +741,11 @@ function time_update()
 
             # Taiye (2025.09.10): symptomatic individuals will always comply
             if !p.comp_bool && rand() < round(0.5, digits = 1) && !x.symp_inf
-             continue # Taiye (2025.09.21)
-               # x.comp = false
+
+                # Taiye (2025.09.23)
+                x.notified = false
+                x.n_tests_perf = 0
+            # continue # Taiye (2025.09.21)
             end
 
             if x.notified && !x.testedpos && x.n_tests_perf <= p.n_tests && x.timetotest <= 0 && x.time_since_testing >= p.time_between_tests # Taiye (2025.09.18): Removed x.comp
@@ -770,6 +774,14 @@ function time_update()
             
             end
         end
+        
+        # Taiye (2025.09.24):
+        for x in humans
+            if x.testedpos && !x.reported
+                send_notification(x,p.not_swit)
+            end
+        end
+        
     end
 
     for x in humans 
@@ -961,7 +973,7 @@ function testing_infection(x::Human, teste)
         end
 
         # Taiye (2025.06.24): send_notifications(x)
-        send_notification(x,p.not_swit)
+      #  send_notification(x,p.not_swit)
 
     else # Taiye: counting the number of negative tests performed.
           x.n_neg_tests += 1
