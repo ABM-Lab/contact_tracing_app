@@ -118,7 +118,7 @@ Base.@kwdef mutable struct Human
     # Taiye (2025.10.07):
     symp_inf::Bool = false
     reported::Bool = false
-
+    isolation_days::Int64 = 7
 end
 
 ## default system parameters
@@ -148,8 +148,6 @@ end
     app_coverage = 0.4
     track_days::Int8 = 3
     
-    isolation_days::Int64 = 5
-
     # Taiye (2025.07.29)
     #ageintapp::Vector{Int64} = [10; 60]
     ageintapp::Vector{Int64} = [18; 65]
@@ -776,7 +774,7 @@ function time_update()
         #if the individual recovers, we need to set they free. This loop must be here
 
         # if x.iso && x.daysisolation >= p.isolation_days && !(x.health_status in (HOS,ICU,DED))
-        if x.iso && x.daysisolation >= p.isolation_days && !(x.health_status == DED) 
+        if x.iso && x.daysisolation >= x.isolation_days && !(x.health_status == DED) 
             _set_isolation(x,false,:null)
             
             x.n_tests_perf = 0 # Taiye
@@ -809,11 +807,14 @@ export time_update
     # a person could be isolated in mild/severe phase through fmild, fsevere
     # --> if x.iso == true from CT and x.isovia == :ct, do not overwrite
     # --> if x.iso == true from PRE and x.isovia == :pi, do not overwrite
-    if x.isovia == :null || via == :sev
+    if x.isovia == :null || via == :symp
         x.iso = iso 
         x.isovia = via
         x.daysisolation = 0
         x.days_after_detection = 0
+
+        # Taiye (2025.10.08):
+        x.isolation_days = via == :test ? 7 : 5
     elseif !iso
         x.iso = iso 
         x.isovia = via
@@ -947,6 +948,7 @@ function send_notification(x::Human,switch) # Taiye (2025.05.22): added an 's' t
             end
             #humans[i].time_since_testing = 0#p.time_between_tests # Taiye
         end
+        x.reported = true # Taiye (2025.10.05): To avoid sending notifications more than once.
     end
 
 end
@@ -984,6 +986,7 @@ end
 
 
 function move_to_inf(x::Human)
+    x.symp_inf = true # Taiye (2025.10.05): To identify symptomatic infectious individuals.
     ## transfers human h to the severe infection stage for γ days
     ## for swap, check if person will be hospitalized, selfiso, die, or recover
  
