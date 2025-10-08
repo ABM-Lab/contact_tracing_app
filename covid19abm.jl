@@ -115,6 +115,10 @@ Base.@kwdef mutable struct Human
     # Taiye (2025.08.05):
     quar::Int64 = 0
 
+    # Taiye (2025.10.07):
+    symp_inf::Bool = false
+    reported::Bool = false
+
 end
 
 ## default system parameters
@@ -148,7 +152,7 @@ end
 
     # Taiye (2025.07.29)
     #ageintapp::Vector{Int64} = [10; 60]
-    ageintapp::Vector{Int64} = [18; 65]
+    ageintapp::Vector{Int64} = [18; 70]
     ##for testing
 
     test_ra::Int64 = 2 # Taiye (2025.06.24): 1 - PCR, 2 - Abbott_PanBio 3 - 	BD VERITO	4 - SOFIA
@@ -156,7 +160,7 @@ end
 
     time_until_testing::Int64 = 1
     n_tests::Int64 = 2 # Taiye (2025.07.20): Restore to 2
-    time_between_tests::Int64 = 3
+    time_between_tests::Int64 = 0
 
     #n_neg_tests::Int64 = 0 # Taiye
 
@@ -733,6 +737,14 @@ function time_update()
         end
     end
 
+    for x in humans
+            if x.iso && x.symp_inf && x.testedpos # Taiye (2025.10.05): Added if-statement so that symptomatic cases that tested positive send notifications daily.
+                send_notification(x,p.not_swit)
+            elseif x.testedpos && !x.reported && !x.symp_inf # Taiye (2025.10.05): Added !x.symp_inf so that symptomatic cases that tested positive send notifications daily.
+                send_notification(x,p.not_swit)
+            end
+    end
+
     for x in humans 
         x.tis += 1 
         x.doi += 1 # increase day of infection. variable is garbage until person is latent
@@ -917,7 +929,7 @@ function testing_infection(x::Human, teste)
         _set_isolation(x, true, :test)
 
         # Taiye (2025.06.24): send_notifications(x)
-        send_notification(x,p.not_swit)
+      #  send_notification(x,p.not_swit)
 
     else # Taiye: counting the number of negative tests performed.
           x.n_neg_tests += 1
@@ -1005,7 +1017,7 @@ function move_to_inf(x::Human)
         x.timetotest = 1
     end
 
-   # _set_isolation(x, true, :inf) 
+    _set_isolation(x, true, :symp) 
 
        
    # else ## no hospital for this lucky (but severe) individual 
