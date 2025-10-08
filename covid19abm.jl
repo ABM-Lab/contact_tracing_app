@@ -984,7 +984,6 @@ end
 #end
 #export move_to_mild
 
-
 function move_to_inf(x::Human)
     x.symp_inf = true # Taiye (2025.10.05): To identify symptomatic infectious individuals.
     ## transfers human h to the severe infection stage for γ days
