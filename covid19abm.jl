@@ -979,6 +979,9 @@ function move_to_inf(x::Human)
         x.timetotest = 1
     end
 
+    # Taiye (2025.10.08):
+    _set_isolation(x,true,:symp)
+
        
    # else ## no hospital for this lucky (but severe) individual 
     if rand() < mh_2[gg]
