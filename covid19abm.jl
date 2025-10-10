@@ -715,6 +715,12 @@ function time_update()
             end
         end
     end
+    
+    for x in humans
+        if x.testedpos && !x.reported # Taiye (2025.10.10)
+                send_notification(x,p.not_swit)
+        end
+    end
 
     for x in humans 
         x.tis += 1 
@@ -1117,9 +1123,13 @@ export _get_betavalue
      #   x.nextday_meetcnt = 0
     #end
    
-    for i in 2:p.track_days
-        x.contacts[i] = deepcopy(x.contacts[i-1])
-    end
+    # Taiye (2025.10.10):
+  #  for i in 2:p.track_days
+   #     x.contacts[i] = deepcopy(x.contacts[i-1])
+  #  end
+    x.contacts[3] = deepcopy(x.contacts[2])
+    x.contacts[2] = deepcopy(x.contacts[1])
+
     x.contacts[1] = repeat([0], max(x.nextday_meetcnt, 1))
     x.ncontacts_day = 0
 
