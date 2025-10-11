@@ -105,20 +105,20 @@ end
 
 ## default system parameters
 @with_kw mutable struct ModelParameters @deftype Float64    ## use @with_kw from Parameters
-    β = 0.0345       
+    β = 0.1 #0345       
     seasonal::Bool = false ## seasonal betas or not
     popsize::Int64 = 10000
     prov::Symbol = :ontario
     calibration::Bool = false
     calibration2::Bool = false 
     start_several_inf::Bool = true
-    modeltime::Int64 = 435
+    modeltime::Int64 = 365
     initialinf::Int64 = 1
     fmild::Float64 = 0.5  ## percent of people practice self-isolation
     # Taiye: Could be useful later for keeping track of the population in isolation.
 
-    start_testing::Int64 = 2 # Taiye (2025.06.30): 0 -> 2
-    test_for::Int64 = 200 # Taiye (2025.07.01): 0 -> 2 -> 200
+    start_testing::Int64 = 1 # Taiye (2025.06.30): 0 -> 2
+    test_for::Int64 = 365 # Taiye (2025.07.01): 0 -> 2 -> 200
     fsevere::Float64 = 1.0 #
     frelasymp::Float64 = 0.26 ## relative transmission of asymptomatic
     fctcapture::Float16 = 0.0 ## how many symptomatic people identified
@@ -137,7 +137,7 @@ end
 
     time_until_testing::Int64 = 1
     n_tests::Int64 = 2 # Taiye (2025.07.20): Restore to 2
-    time_between_tests::Int64 = 0
+    time_between_tests::Int64 = 3
 
     #n_neg_tests::Int64 = 0 # Taiye
 
@@ -702,8 +702,7 @@ function time_update()
             x.timetotest -= 1
             x.time_since_testing += 1 # Taiye: We could measure this in days.
 
-            # Remove x.symp_inf
-            if x.notified && !x.testedpos && x.n_tests_perf <= p.n_tests && x.timetotest <= 0 && x.time_since_testing >= p.time_between_tests && x.symp_inf # Taiye
+            if x.notified && !x.testedpos && x.n_tests_perf <= p.n_tests && x.timetotest <= 0 && x.time_since_testing >= p.time_between_tests 
                 testing_infection(x, p.test_ra)
                 
                 x.time_since_testing = 0
