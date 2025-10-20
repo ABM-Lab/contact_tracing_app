@@ -99,8 +99,16 @@ Base.@kwdef mutable struct Human
     symp_inf::Bool = false
     reported::Bool = false
     tstd::Bool = false
-    isolation_days::Int64 = 7
+    isolation_days::Int64 = 8 # Taiye (2025.10.14)
     pp::Float64 = 0.0 # probability of testing positive
+
+    # Taiye (2025.10.16):
+    iso_entry::HEALTH = UNDEF
+    iso_dur::HEALTH = UNDEF
+    iso_exit::HEALTH = UNDEF
+
+    # Taiye (2025.10.18):
+    pre_test::Bool = false
 end
 
 ## default system parameters
@@ -129,7 +137,7 @@ end
     app_coverage = 1.0
     track_days::Int8 = 3
     
-    ageintapp::Vector{Int64} = [18; 70]
+    ageintapp::Vector{Int64} = [18; 65]
     ##for testing
 
     test_ra::Int64 = 2 # Taiye (2025.06.24): 1 - PCR, 2 - Abbott_PanBio 3 - 	BD VERITO	4 - SOFIA
@@ -183,7 +191,7 @@ export ModelParameters, HEALTH, Human, humans, BETAS
 function runsim(simnum, ip::ModelParameters)
     # function runs the `main` function, and collects the data as dataframes. 
     # Taiye (2025.06.06): hmatrix, hh1, nra, npcr, nleft = main(ip,simnum)           
-    hmatrix, hh1, nra = main(ip,simnum)  
+    hmatrix, hh1, nra, lat_tot, asymp_tot, pre_tot, inf_tot = main(ip,simnum)  # Taiye (2025.10.16)
 
     #Get the R0
     
@@ -245,11 +253,35 @@ function runsim(simnum, ip::ModelParameters)
     quar_tot = sum([Int(x.quar) for x in humans])
 
 
+    # Taiye (2025.10.16):
+   # lat_entry = sum([Int(x.iso_entry == LAT) for x in humans])
+ #   asymp_entry = sum([Int(x.iso_entry == ASYMP) for x in humans])
+  #  pre_entry = sum([Int(x.iso_entry == PRE) for x in humans])
+   # inf_entry = sum([Int(x.iso_entry == INF && x.has_app) for x in humans])
+    #not_entry = sum([Int(x.iso_entry in (LAT,ASYMP,PRE)) for x in humans])
+
+#    asymp_dur = sum([Int(x.iso_dur == ASYMP) for x in humans])
+ #   pre_dur = sum([Int(x.iso_dur == PRE) for x in humans])
+    #inf_dur = sum([Int(x.iso_dur == INF && x.has_app) for x in humans])
+   # not_dur = sum([Int(x.iso_dur in (ASYMP,PRE,INF)) for x in humans])
+
+  #  lat_exit = sum([Int(x.iso_exit == LAT) for x in humans])
+ #   asymp_exit = sum([Int(x.iso_exit == ASYMP) for x in humans])
+  #  pre_exit = sum([Int(x.iso_exit == PRE) for x in humans])
+   # inf_exit = sum([Int(x.iso_exit == INF && x.has_app) for x in humans])
+  #  not_exit = sum([Int(x.iso_exit in (LAT,ASYMP,PRE,INF)) for x in humans])
+
+
+
     # Taiye (2025.08.06):
     # return (a=all1, g1=ag1, g2=ag2, g3=ag3, g4=ag4, g5=ag5,g6=ag6,g7=ag7, work = work,vector_dead=vector_ded,nra=nra,npcr=npcr, R0 = R01, niso_t_p=niso_t_p, nleft=nleft,giso = giso, wiso = wiso)
     return (a=all1, g1=ag1, g2=ag2, g3=ag3, g4=ag4, g5=ag5,g6=ag6,g7=ag7,
     vector_dead=vector_ded,nra=nra,R0 = R01, giso = giso, u1 = use_1, u2 = use_2, 
-    quar_tot = quar_tot)
+    quar_tot = quar_tot, lat_tot = lat_tot, asymp_tot = asymp_tot, pre_tot = pre_tot, inf_tot = inf_tot)#inf_entry = inf_entry, 
+    #lat_entry = lat_entry, asymp_entry = asymp_entry, pre_entry = pre_entry, inf_entry = inf_entry,
+   # asymp_dur = asymp_dur, pre_dur = pre_dur, inf_dur = inf_dur,
+   # lat_exit = lat_exit, asymp_exit = asymp_exit, pre_exit = pre_exit, inf_exit = inf_exit,
+   # lat_tot = lat_tot, asymp_tot = asymp_tot, pre_tot = pre_tot, inf_tot = inf_tot) # Taiye (2025.10.16)
 end
 export runsim
 
@@ -295,6 +327,13 @@ function main(ip::ModelParameters,sim::Int64)
     # distributing app_coverage
     dist_app(humans, p, p.num_sims)
      
+
+    # Taiye (2025.10.16):
+    lat_tot = zeros(Int64, 1, p.modeltime)
+    pre_tot = zeros(Int64, 1, p.modeltime)
+    asymp_tot = zeros(Int64, 1, p.modeltime)
+    inf_tot = zeros(Int64, 1, p.modeltime)
+
     # start the time loop
     for st = 1:min((p.start_testing-1),p.modeltime)
         
@@ -334,6 +373,14 @@ function main(ip::ModelParameters,sim::Int64)
         nra[st] += sw
 
         # end of day
+
+        # Taiye (2025.10.17):
+        for x in humans
+            lat_tot[st] = sum([Int(x.health_status == LAT && x.iso ) for x in humans])
+            pre_tot[st] = sum([Int(x.health_status == PRE && x.iso) for x in humans])
+            asymp_tot[st] = sum([Int(x.health_status == ASYMP && x.iso) for x in humans])
+            inf_tot[st] = sum([Int(x.health_status == INF && x.iso) for x in humans])
+        end
     end
 
     setfield!(p,:testing,false)
@@ -355,7 +402,7 @@ function main(ip::ModelParameters,sim::Int64)
     
     
     # Taiye (2025.06.06): return hmatrix, h_init1, nra, npcr, nleft## return the model state as well as the age groups. 
-    return hmatrix, h_init1, nra
+    return hmatrix, h_init1, nra, lat_tot, asymp_tot, pre_tot, inf_tot
 end
 export main
 
@@ -751,12 +798,21 @@ function time_update()
         end
         #if the individual recovers, we need to set they free. This loop must be here
 
+        # Taiye (2025.10.16):
+      #  if x.iso && x.iso_entry != x.health_status && x.iso_dur == UNDEF
+       #     x.iso_dur = x.health_status
+       # end
+
+
         # if x.iso && x.daysisolation >= p.isolation_days && !(x.health_status in (HOS,ICU,DED))
         if x.iso && x.daysisolation >= x.isolation_days && !(x.health_status == DED) 
             _set_isolation(x,false,:null)
             
             x.n_tests_perf = 0 # Taiye
             x.n_neg_tests = 0 # Taiye
+
+            # Taiye (2025.10.16):
+          #  x.iso_exit = x.health_status
 
             # if x.testedpos # if the individual was tested and the days of isolation is finished, we can return the tested to false
             #     x.testedpos = false
@@ -792,7 +848,16 @@ export time_update
         x.days_after_detection = 0
 
         # Taiye (2025.10.09):
-        x.isolation_days = via == :test ? 7 : 5
+        x.isolation_days = via == :test ? 8 : 5 # Taiye (2025.10.14)
+
+        # Taiye (2025.10.16):
+        x.iso_entry = x.health_status
+
+        # Taiye (2025.10.18):
+        if x.health_status == PRE
+            x.pre_test = true
+        end
+
     elseif !iso
         x.iso = iso 
         x.isovia = via
