@@ -119,6 +119,10 @@ Base.@kwdef mutable struct Human
     stat_change_3::Bool = false
     day_swap::Int64 = 0
     d_mat::Int64 = 0
+
+    # Taiye (2025.10.29):
+    inf_asp::Bool = false
+
 end
 
 ## default system parameters
@@ -179,6 +183,7 @@ end
 
     # Taiye (2025.10.08):
     comp_bool::Bool = true
+
 end
 
 
@@ -736,7 +741,6 @@ function initialize()
         x.time_since_testing = p.time_between_tests
         # initialize the next day counts (this is important in initialization since dyntrans runs first)
         x.contacts = repeat([[0]], p.track_days)
-        
     end
 end
 export initialize
@@ -816,14 +820,21 @@ function time_update()
     # counters to calculate incidence
 
     nra::Int64 = 0
+
     
-    if p.testing
-        for x in humans
+    if p.testing 
+        for x in humans 
             x.timetotest -= 1
             x.time_since_testing += 1 # Taiye: We could measure this in days.
 
+         #   if x.notified && rand() < round(0.5,digits = 1) && !p.comp_bool && !x.symp_inf # Taiye (2025.10.30)
+          #      x.notified = false
+           #     x.n_tests_perf = 0
+           # end
+
             if x.notified && !x.testedpos && x.n_tests_perf <= p.n_tests && x.timetotest <= 0 && x.time_since_testing >= p.time_between_tests 
                 testing_infection(x, p.test_ra)
+              #  println(pp)
                 
                 x.time_since_testing = 0
                 x.n_tests_perf += 1
@@ -974,6 +985,10 @@ end
 
 function move_to_latent(x::Human)
     ## transfers human h to the incubation period and samples the duration
+
+    # Taiye (2025.10.29):
+    x.inf_asp = true
+
     x.health = x.swap
     x.health_status = x.swap_status
     x.doi = 0 ## day of infection is reset when person becomes latent
@@ -1050,7 +1065,6 @@ function testing_infection(x::Human, teste)
 
     x.pp = pp
     x.d_mat = d_mat
-    
     if rand() < pp
         x.testedpos = true
 
@@ -1064,6 +1078,8 @@ function testing_infection(x::Human, teste)
     else # Taiye: counting the number of negative tests performed.
           x.n_neg_tests += 1
     end
+#   println(pp)
+
 end
 
 function send_notification(x::Human,switch) # Taiye (2025.05.22): added an 's' to 'human'; Update: 'humans' -> 'Human'
@@ -1071,7 +1087,7 @@ function send_notification(x::Human,switch) # Taiye (2025.05.22): added an 's' t
         v = vcat(x.contacts...)
         for i in v
             if 1 <= i <= length(humans) && !humans[i].notified # Taiye: To avoid new notifications resetting times.
-                humans[i].notified = true
+                humans[i].notified = rand() < round(0.5,digits = 1) && !p.comp_bool ? true : false
                 humans[i].timetotest = p.time_until_testing
             end
             #humans[i].time_since_testing = 0#p.time_between_tests # Taiye
@@ -1284,6 +1300,11 @@ function dyntrans(sys_time, grps,sim)
     #totalinf = 0 # count number of new infected 
     ## find all the people infectious
     #rng = MersenneTwister(246*sys_time*sim)
+
+    # Taiye (2025.10.28):
+   # rng = MersenneTwister(246*sys_time*sim)
+    #pos = shuffle(rng,1:length(humans))
+
     pos = shuffle(1:length(humans))
     # go through every infectious person
     for x in humans[pos]        
@@ -1306,6 +1327,9 @@ end
 export dyntrans
 
 function perform_contacts(x,gpw,grp_sample,xhealth)
+
+    # Taiye (2025.10.28):
+   # Random.seed!(42)
 
     for (i, g) in enumerate(gpw) 
         meet = rand(grp_sample[i], g)   # sample the people from each group
