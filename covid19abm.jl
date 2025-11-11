@@ -847,8 +847,9 @@ function time_update(st,sim)
     end
     
     for x in humans
+        rng = MersenneTwister(246*st*sim*x.idx)
         if x.testedpos && !x.reported # Taiye (2025.10.10)
-                send_notification(x,p.not_swit,st,sim)
+                send_notification(x,p.not_swit,st,sim,rng)
         end
     end
 
@@ -1082,8 +1083,8 @@ function testing_infection(x::Human, teste)
 
 end
 
-function send_notification(x::Human,switch,st,sim) # Taiye (2025.05.22): added an 's' to 'human'; Update: 'humans' -> 'Human'
-    rng = MersenneTwister(246*st*sim)
+function send_notification(x::Human,switch,st,sim,rng) # Taiye (2025.05.22): added an 's' to 'human'; Update: 'humans' -> 'Human'
+    # Taiye (2025.11.11): rng = MersenneTwister(246*st*sim)
     if switch
         v = vcat(x.contacts...)
         for i in v
