@@ -851,7 +851,7 @@ function time_update(st,sim)
 
       #  rng = MersenneTwister(246*st*sim*x.idx)
         if x.testedpos && !x.reported # Taiye (2025.10.10)
-                rng = MersenneTwister(246*st*sim*x.idx) # Taiye (2025.11.11): Faster here
+                # rng = MersenneTwister(246*st*sim*x.idx) # Taiye (2025.11.11): Faster here
                 send_notification(x,p.not_swit,st,sim,rng)
         end
     end
