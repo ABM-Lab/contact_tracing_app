@@ -1,32 +1,13 @@
 module covid19abm
 
-# Thomas:
-# - parameter how many tests someone will perform after notification (if negative)
-# - if someone tested negative, they will test again and again until the number is reached or is positive
-# - be careful: new notification cannot set the times to zero if someone is in a series of testing
-
-# Edit: 2025.07.20
-# Any edits that I make will include "#Taiye:".
-
-# Only epidemiological dynamics are considered.
-
-
 using Base
 using Parameters, Distributions, StatsBase, StaticArrays, Random, Match, DataFrames
-# @enum HEALTH SUS LAT PRE ASYMP MILD MISO INF IISO HOS ICU REC DED UNDEF
-@enum HEALTH SUS LAT PRE ASYMP INF REC DED UNDEF # Taiye: MILD MISO IISO HOS ICU
-# Taiye: I commented out hospital and ICU patients because my understanding is that the tests
-# should be self-administered. Seyed also pointed out that their inclusion would overcomplicate 
-# the model. Consequently, MILD, MISO and IISO are also removed because the severity of the 
-# symptoms is not relevant.
-# Taiye: If we assume that the disease can be contracted more than once, recovered individuals
-# could be included in the symptomatic class and otherwise, removed from the population. We could
-# create a REM (removed) class for these two groups.
-# Taiye (update): Recovered individuals will still be considered contacts. We also want to record the individuals that are deceased.
+@enum HEALTH SUS LAT PRE ASYMP INF REC DED UNDEF 
 
+# TO DO: remove fields not used, comment on others, rename variable to be more description
 Base.@kwdef mutable struct Human
     idx::Int64 = 0 
-    health::HEALTH = SUS
+    health::HEALTH = SUS   
     health_status::HEALTH = SUS
     swap::HEALTH = UNDEF
     swap_status::HEALTH = UNDEF
@@ -42,90 +23,54 @@ Base.@kwdef mutable struct Human
     iso::Bool = false  ## isolated (limited contacts)
     isovia::Symbol = :null ## isolated via quarantine (:qu), preiso (:pi), intervention measure (:im), or contact tracing (:ct)    
 
-    #comorbidity::Int8 = 0 ##does the individual has any comorbidity?
-    # Taiye: We are not considering comorbidities at this stage.
-
-    #vac_status::Int8 = 0 ##
     wentto::Int8 = 0
     incubationp::Int16 = 0
-
     got_inf::Bool = false
-    
-    # herd_im::Bool = false
-    # Taiye: We are not considering herd immunity at this stage.
-
     ag_new::Int16 = -1
-    
-    # days_vac::Int16 = -1
-    # Taiye: We are not considering vaccinations at this stage.
-
     index_day::Int16 = 1
-   
-    recovered::Bool = false 
-
+    recovered::Bool = false  # what is this? why not use the health_status field? 
     daysisolation::Int64 = 999 
-
-    # Taiye (2025.06.12):
     days_after_detection::Int64 = 0
-
-    # Taiye (2025.10.09):
-    daysinf::Int64 = 0 #999 
-
+    daysinf::Int64 = 0 
     tookpcr::Bool = false
-    
     nra::Int16 = 0
     pcrprob::Float64 = 0.0
     test::Bool = false
-
     isofalse::Bool = false
-    
     totaldaysiso::Int32 = 0  
     has_app::Bool = false
     contacts::Vector{Vector{Int64}} = [[0; 0]]
-
     ncontacts_day::Int8 = 0
     testedpos::Bool = false
     notified::Bool = false
     timetotest::Int64 = 9999
     n_tests_perf::Int64 = 0
     time_since_testing::Int64 = 0
-
-    n_neg_tests::Int64 = 0 # Taiye
-
-    # Taiye (2025.08.05):
+    n_neg_tests::Int64 = 0
     quar::Int64 = 0
-
-    # Taiye (2025.10.09):
-    symp_inf::Bool = false
+    symp_inf::Bool = false # what is this? why not use the health_status field?
     reported::Bool = false
     tstd::Bool = false
-    isolation_days::Int64 = 8 # Taiye (2025.10.14)
+    isolation_days::Int64 = 8 
     pp::Float64 = 0.0 # probability of testing positive
-
-    # Taiye (2025.10.16):
     iso_entry::HEALTH = UNDEF
     iso_dur = Vector{HEALTH}(undef,3)
     iso_exit::HEALTH = UNDEF
-
-    # Taiye (2025.10.18):
     pre_test::Bool = false
-
-    # Taiye (2025.10.21):
     day_iso::Int64 = 0
     stat_change_1::Bool = false
-
-    # Taiye (2025.10.22):
     stat_change_2::Bool = false
     stat_change_3::Bool = false
     day_swap::Int64 = 0
     d_mat::Int64 = 0
-
-    # Taiye (2025.10.29):
     inf_asp::Bool = false
 
 end
 
-## default system parameters
+# TO DO: comment on fields, rename variable to be more description
+# if a field is only used inside a function, make it constant inside that function
+# if a field remains constant, pull it out and make it a global const variable
+# the only fields that should be here are the ones used for scenario analysis (i.e., ones that we need to change)
 @with_kw mutable struct ModelParameters @deftype Float64    ## use @with_kw from Parameters
     β = 0.1 #0345       
     seasonal::Bool = false ## seasonal betas or not
@@ -137,55 +82,30 @@ end
     modeltime::Int64 = 365
     initialinf::Int64 = 1
     fmild::Float64 = 0.5  ## percent of people practice self-isolation
-    # Taiye: Could be useful later for keeping track of the population in isolation.
 
     start_testing::Int64 = 1 # Taiye (2025.06.30): 0 -> 2
     test_for::Int64 = 365 # Taiye (2025.07.01): 0 -> 2 -> 200
     fsevere::Float64 = 1.0 #
     frelasymp::Float64 = 0.26 ## relative transmission of asymptomatic
     fctcapture::Float16 = 0.0 ## how many symptomatic people identified
-    
-
     file_index::Int16 = 0
-    
     app_coverage = 1.0
     track_days::Int8 = 3
-    
     ageintapp::Vector{Int64} = [18; 65]
-    ##for testing
-
-    test_ra::Int64 = 2 # Taiye (2025.06.24): 1 - PCR, 2 - Abbott_PanBio 3 - 	BD VERITO	4 - SOFIA
-    # Taiye: I believe that PCR tests are the only ones being considered.
-
+    test_ra::Int64 = 2
     time_until_testing::Int64 = 1
     n_tests::Int64 = 2 # Taiye (2025.07.20): Restore to 2
     time_between_tests::Int64 = 3
-
-    #n_neg_tests::Int64 = 0 # Taiye
-
-    # Taiye (2025.06.09): Tentative contact change rates
     contact_change_rate::Float64 = 1.0
     contact_change_2::Float64 = 1.0
-
-    # Taiye (2025.06.12): Attempting to correct 'ERROR: type ModelParameters has no field testing'
     testing::Bool = false
-
-    # Taiye (2025.06.24): asymp_red was not defined in matrices_code.jl.
-    asymp_red::Float64 = 0.5 # Taiye (2025.06.24): tentative value
-
-    # Taiye (2025.07.20): Notification parameter
+    asymp_red::Float64 = 0.5 
     not_swit::Bool = false
-
-    # Taiye (2025.07.28): number of simulations, number of contacts in isolation
     num_sims::Int64 = 500
     iso_con::Int64 = 0
     test_sens::Int64 = 1
-
-    # Taiye (2025.10.08):
     comp_bool::Bool = true
-
 end
-
 
 Base.show(io::IO, ::MIME"text/plain", z::Human) = dump(z)
 
