@@ -1,7 +1,3 @@
-
-
-
-
 function vector_probs()
     #this must be written as the reverse vector of incidence
     if p.prov == :ontario

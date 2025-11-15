@@ -82,8 +82,6 @@ Base.show(io::IO, ::MIME"text/plain", z::Human) = dump(z) # Displays the HUMAN s
 include("matrices_code.jl")
 include("matrices.jl")
 
-
-
 ## constants 
 const humans = Array{Human}(undef, 0) # This array is used to define the unqiue characteristics of each individual.
 const p = ModelParameters()  ## setup default parameters
@@ -165,6 +163,7 @@ function main(ip::ModelParameters,sim::Int64)
 
     #insert one infected in the latent status in age group 4
     insert_infected(LAT, p.initialinf, 4)
+    # suppose p.initialinf = 10 => inserted 10 latent people in ag4. 
 
     h_init1 = findall(x->x.health_status  in (LAT,INF,PRE,ASYMP), humans) # Records the indexes of individuals infected at the beginning of the simulation.
     
@@ -239,7 +238,6 @@ function main(ip::ModelParameters,sim::Int64)
 end
 export main
 
-
 # The dist_app function distributes the application across the eligible population.
 function dist_app(humans, p, sim)
     ageintapp::Vector{Int64} = [18; 65] # The age range for the application.
@@ -254,7 +252,6 @@ function dist_app(humans, p, sim)
         humans[i].has_app = true
     end
 end
-
 
 function reset_params(ip::ModelParameters)
     # the p is a global const
@@ -371,7 +368,6 @@ function get_province_ag(prov) # Assists in the determination of the age distrib
 end
 export get_province_ag
 
-
 function initialize() # We initialize the population.
     agedist = get_province_ag(p.prov)
     agebraksnew = [0:4,5:14,15:24,25:34,35:44,45:54,55:64,65:74,75:84,85:99]
@@ -411,38 +407,38 @@ function insert_infected(health, num, ag)
             x.dur = sample_epi_durations(x) # Determing the amount of time that an individual spends in each state.
 
             if health == PRE
-                    x.swap = health
-                    x.swap_status = PRE
-                    x.daysinf = x.dur[1]+1
-                    x.wentto = 1
-                    move_to_pre(x) 
+                x.swap = health
+                x.swap_status = PRE
+                x.daysinf = x.dur[1]+1
+                x.wentto = 1
+                move_to_pre(x) 
 
             elseif health == LAT
-                    x.swap = health
-                    x.swap_status = LAT
-                    x.daysinf = rand(1:x.dur[1])
-                    move_to_latent(x)
+                x.swap = health
+                x.swap_status = LAT
+                x.daysinf = rand(1:x.dur[1])
+                move_to_latent(x)
 
             elseif health == INF
-                    x.swap = health
-                    x.swap_status = INF
-                    x.wentto = 1
-                    move_to_inf(x)
+                x.swap = health
+                x.swap_status = INF
+                x.wentto = 1
+                move_to_inf(x)
 
             elseif health == ASYMP
-                    x.swap = health
-                    x.swap_status = ASYMP
-                    x.wentto = 2
-                    move_to_asymp(x)
+                x.swap = health
+                x.swap_status = ASYMP
+                x.wentto = 2
+                move_to_asymp(x)
                 
             elseif health == REC 
-                    x.swap = health
-                    x.swap_status = REC
-                    x.wentto = rand(1:2)
-                    move_to_recovered(x)
+                x.swap = health
+                x.swap_status = REC
+                x.wentto = rand(1:2)
+                move_to_recovered(x)
 
             else 
-                    error("can not insert human of health $(health)")
+                error("can not insert human of health $(health)")
             end
 
             x.sickfrom = INF # this will add +1 to the INF count in _count_infectors()... keeps the logic simple in that function.    
