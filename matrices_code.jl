@@ -806,12 +806,19 @@ function _get_prob_test(x::Human,test::Int64,sens)
     M = get_matrix(x,test)
     pp = [0.001 0.002 0.002 0.002]
     #1 - RT-PCR, 2 - Abbott_PanBio 3 - BTNX_Rapid_Response	4 - Artron
+
+    asymp_red = 0.5 # This is the reduction rate that determines the likelihood of an asymptomatic individual testing positive.
+
     if !x.got_inf
         prob = 0
+        # Taiye (2025.10.23): Testing purposes.
+        d = 0
+     #   error("got to first if")
     elseif x.daysinf+1 > size(M,2)
         d = 1
         #[0.005 0.015 0.015 0.015]
         prob = 0
+      #  stop(string("got to second if ",x.daysinf))
         
     else
         #Let's create a Tuple with one matrix for each strain
@@ -826,7 +833,7 @@ function _get_prob_test(x::Human,test::Int64,sens)
             prob = 1
         else
             prob = M[x.incubationp,d]
-            prob = x.wentto > 0 ? prob*(p.asymp_red^(x.wentto-1)) : prob
+            prob = x.wentto > 0 ? prob*(asymp_red^(x.wentto-1)) : prob
         end
         # prob = 1
 
